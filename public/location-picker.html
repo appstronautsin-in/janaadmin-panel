@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Location</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background: white;
+            border-bottom: 2px solid #000;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .search-container {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .search-box {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #000;
+            font-size: 1rem;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #000;
+            box-shadow: 0 0 0 1px #000;
+        }
+        #map {
+            flex: 1;
+        }
+        .footer {
+            background: white;
+            border-top: 2px solid #000;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .location-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .location-name-input {
+            padding: 0.5rem;
+            border: 1px solid #000;
+            font-size: 0.875rem;
+            width: 100%;
+        }
+        .coordinates {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #000;
+            background: white;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #f3f4f6;
+        }
+        .btn-primary {
+            background: #000;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #374151;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Select Location</h1>
+    </div>
+
+    <div class="search-container">
+        <input
+            id="searchBox"
+            type="text"
+            class="search-box"
+            placeholder="Search for a location..."
+        />
+    </div>
+
+    <div id="map"></div>
+
+    <div class="footer">
+        <div class="location-info">
+            <input
+                id="locationName"
+                type="text"
+                class="location-name-input"
+                placeholder="Enter location name..."
+            />
+            <div class="coordinates">
+                Lat: <span id="latitude">0</span>, Lng: <span id="longitude">0</span>
+            </div>
+        </div>
+        <div class="button-group">
+            <button onclick="window.close()">Cancel</button>
+            <button class="btn-primary" onclick="confirmLocation()">Confirm Location</button>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let marker;
+        let searchBox;
+
+        function initMap() {
+            const defaultCenter = { lat: 14.4644, lng: 75.9241 };
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const lat = parseFloat(urlParams.get('lat')) || defaultCenter.lat;
+            const lng = parseFloat(urlParams.get('lng')) || defaultCenter.lng;
+            const locationName = urlParams.get('locationName') || '';
+
+            const center = { lat, lng };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: center,
+                zoom: 13,
+                mapTypeControl: false,
+                streetViewControl: false
+            });
+
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true,
+                position: center
+            });
+
+            if (locationName) {
+                document.getElementById('locationName').value = locationName;
+            }
+
+            updateCoordinates(lat, lng);
+
+            marker.addListener('dragend', function() {
+                const position = marker.getPosition();
+                updateCoordinates(position.lat(), position.lng());
+            });
+
+            map.addListener('click', function(event) {
+                marker.setPosition(event.latLng);
+                updateCoordinates(event.latLng.lat(), event.latLng.lng());
+            });
+
+            const input = document.getElementById('searchBox');
+            searchBox = new google.maps.places.SearchBox(input);
+
+            map.addListener('bounds_changed', function() {
+                searchBox.setBounds(map.getBounds());
+            });
+
+            searchBox.addListener('places_changed', function() {
+                const places = searchBox.getPlaces();
+                if (places.length === 0) return;
+
+                const place = places[0];
+                if (!place.geometry || !place.geometry.location) return;
+
+                map.setCenter(place.geometry.location);
+                map.setZoom(15);
+                marker.setPosition(place.geometry.location);
+
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                updateCoordinates(lat, lng);
+
+                if (place.name) {
+                    document.getElementById('locationName').value = place.name;
+                }
+            });
+        }
+
+        function updateCoordinates(lat, lng) {
+            document.getElementById('latitude').textContent = lat.toFixed(6);
+            document.getElementById('longitude').textContent = lng.toFixed(6);
+        }
+
+        function confirmLocation() {
+            const locationName = document.getElementById('locationName').value.trim();
+            const latitude = parseFloat(document.getElementById('latitude').textContent);
+            const longitude = parseFloat(document.getElementById('longitude').textContent);
+
+            if (!locationName) {
+                alert('Please enter a location name');
+                return;
+            }
+
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'LOCATION_SELECTED',
+                    data: {
+                        locationName,
+                        latitude,
+                        longitude
+                    }
+                }, '*');
+                window.close();
+            }
+        }
+
+        window.addEventListener('load', function() {
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB4whweXXbh9dQc1tNfJPcEpA4LD2LWBgc&libraries=places&callback=initMap';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html>

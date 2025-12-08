@@ -1,0 +1,506 @@
+import React, { useState, useEffect } from 'react';
+import { Pencil, Trash2, Loader2, X, Eye, Filter, Search, Facebook, MessageSquare } from 'lucide-react';
+import api from '../config/axios';
+import { IMAGE_BASE_URL } from '../config/constants';
+import ViewNews from './ViewNews';
+import EditNews from './EditNews';
+import ViewComments from './ViewComments';
+import { usePermissions } from '../middleware/PermissionsMiddleware';
+import { logActivity, ActivityActions, ActivitySections } from '../utils/activityLogger';
+
+interface ManageNewsProps {
+  onClose: () => void;
+  showAlert: (message: string, type: 'success' | 'error') => void;
+}
+
+interface News {
+  _id: string;
+  category: {
+    _id: string;
+    name: string;
+  } | null;
+  subCategory: {
+    _id: string;
+    name: string;
+  } | null;
+  image: string[];
+  authors: Array<{
+    _id: string;
+    fullname: string;
+    position: string;
+  }>;
+  addedBy: {
+    _id: string;
+    fullname: string;
+    position: string;
+  };
+  title: string;
+  subTitle: string;
+  content: string;
+  tags: string[];
+  views: number;
+  status: 'Draft' | 'Approved' | 'Scheduled' | 'Published' | 'Rejected';
+  shareable: boolean;
+  isAllowedScreenshot: boolean;
+  createdAt: string;
+  updatedAt: string;
+  scheduleDate?: string;
+  isPublished: boolean;
+  isPostUploadedFb?: boolean;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+}
+
+const ITEMS_PER_PAGE = 20;
+
+const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
+  const [news, setNews] = useState<News[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [viewingNews, setViewingNews] = useState<News | null>(null);
+  const [editingNews, setEditingNews] = useState<string | null>(null);
+  const [viewingComments, setViewingComments] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [categoryLoading, setCategoryLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [postingToFacebook, setPostingToFacebook] = useState<string | null>(null);
+
+  const { checkPermission } = usePermissions();
+  const canCreate = checkPermission('createNews');
+  const canEdit = checkPermission('editNews');
+  const canDelete = checkPermission('deleteNews');
+  const hasFullPermissions = canCreate && canEdit && canDelete;
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (!categoryLoading) {
+      fetchNews();
+    }
+  }, [currentPage, selectedCategory, categoryLoading]);
+
+  useEffect(() => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      setCurrentPage(1);
+      fetchNews();
+    }, 500);
+
+    setSearchTimeout(timeout);
+
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTerm]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/v1/category/all');
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      showAlert('Failed to fetch categories', 'error');
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
+
+  const fetchNews = async () => {
+    try {
+      let endpoint = '/v1/news/admin';
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: ITEMS_PER_PAGE.toString()
+      });
+
+      if (searchTerm) {
+        queryParams.append('search', searchTerm);
+      }
+
+      if (selectedCategory) {
+        queryParams.append('category', selectedCategory);
+      }
+
+      const response = await api.get(`${endpoint}?${queryParams}`);
+      
+      if (response.data) {
+        setNews(response.data.data || []);
+        setTotalPages(response.data.totalPages || 1);
+        setCurrentPage(response.data.currentPage || 1);
+        setTotalItems(response.data.totalItems || 0);
+      } else {
+        setNews([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      showAlert('Failed to fetch news', 'error');
+      setNews([]);
+      setTotalPages(1);
+      setTotalItems(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!canDelete) {
+      showAlert('You do not have permission to delete news', 'error');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this news article?')) {
+      return;
+    }
+
+    setDeleteLoading(id);
+    try {
+      const newsToDelete = news.find(n => n._id === id);
+      await api.delete(`/v1/news/${id}`);
+
+      await logActivity(
+        ActivityActions.DELETE,
+        ActivitySections.NEWS,
+        `Deleted news: ${newsToDelete?.title || 'Unknown'}`,
+        { newsId: id, newsTitle: newsToDelete?.title, category: newsToDelete?.category?.name }
+      );
+
+      await fetchNews();
+      showAlert('News deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting news:', error);
+      showAlert('Failed to delete news', 'error');
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  const handleView = (newsItem: News) => {
+    setViewingNews(newsItem);
+  };
+
+  const handleEdit = (newsId: string) => {
+    if (!canEdit) {
+      showAlert('You do not have permission to edit news', 'error');
+      return;
+    }
+    setEditingNews(newsId);
+  };
+
+  const handlePostToFacebook = async (id: string) => {
+    setPostingToFacebook(id);
+    try {
+      await api.post(`/v1/facebook-post/post-news/${id}`);
+      showAlert('News posted to Facebook successfully', 'success');
+    } catch (error: any) {
+      console.error('Error posting to Facebook:', error);
+      showAlert(error.response?.data?.message || 'Failed to post to Facebook', 'error');
+    } finally {
+      setPostingToFacebook(null);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Published':
+        return 'bg-green-100 text-green-800 border-green-800';
+      case 'Approved':
+        return 'bg-blue-100 text-blue-800 border-blue-800';
+      case 'Scheduled':
+        return 'bg-purple-100 text-purple-800 border-purple-800';
+      case 'Rejected':
+        return 'bg-red-100 text-red-800 border-red-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-800';
+    }
+  };
+
+  if (loading || categoryLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="bg-white border border-black shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Manage News</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <input
+              type="text"
+              placeholder="Search by title, subtitle, or content..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-full border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 min-w-[300px] max-w-[300px]">
+            <Filter className="h-5 w-5 text-gray-500 shrink-0" />
+            <div className="relative w-full">
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full border border-black rounded px-3 py-2 pr-8 bg-white focus:outline-none focus:ring-1 focus:ring-black text-sm"
+              >
+                <option value="">All Categories</option>
+                {categories.map(category => (
+                  <option 
+                    key={category._id} 
+                    value={category._id}
+                  >
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {news.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No news articles found
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50 border-b border-black">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-black">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-black">
+                    Category
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-black">
+                    Authors
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-black">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-black">
+                    Created At
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-black">
+                {news.map((item) => (
+                  <tr key={item._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 border-r border-black">
+                      <div className="flex items-center">
+                        {item.image?.[0] && (
+                          <img
+                            src={`${IMAGE_BASE_URL}/${item.image[0]}`}
+                            alt={item.title}
+                            className="h-10 w-10 object-cover border border-black mr-3"
+                          />
+                        )}
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.title}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {item.subTitle.length > 50 
+                              ? `${item.subTitle.substring(0, 50)}...` 
+                              : item.subTitle}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-black">
+                      <div className="text-sm text-gray-900">
+                        {item.category?.name || 'Uncategorized'}
+                      </div>
+                      {item.subCategory && (
+                        <div className="text-sm text-gray-500">{item.subCategory.name}</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 border-r border-black">
+                      <div className="text-sm text-gray-900">
+                        {item.authors?.map(author => author.fullname).join(', ') || 'No authors'}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Added by: {item.addedBy?.fullname || 'Unknown'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-black">
+                      <div className="flex flex-col gap-1">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-medium border ${getStatusBadgeClass(item.status)}`}>
+                          {item.status}
+                        </span>
+                        {item.scheduleDate && (
+                          <div className="text-xs text-gray-500">
+                            Scheduled: {formatDate(item.scheduleDate)}
+                          </div>
+                        )}
+                        {item.isPostUploadedFb && (
+                          <span className="px-2 inline-flex text-xs leading-5 font-medium bg-blue-100 text-blue-800 border border-blue-800">
+                            Posted to FB
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-black">
+                      {formatDate(item.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => handleView(item)}
+                          className="text-black hover:text-gray-700 border border-black p-1"
+                          title="View"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        {hasFullPermissions && (
+                          <button
+                            onClick={() => setViewingComments(item._id)}
+                            className="text-green-600 hover:text-green-800 border border-green-600 hover:border-green-800 p-1"
+                            title="View Comments"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handlePostToFacebook(item._id)}
+                          disabled={postingToFacebook === item._id || item.isPostUploadedFb}
+                          className="text-blue-600 hover:text-blue-800 border border-blue-600 hover:border-blue-800 p-1 disabled:opacity-50"
+                          title={item.isPostUploadedFb ? "Already posted to Facebook" : "Post to Facebook"}
+                        >
+                          {postingToFacebook === item._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Facebook className="h-4 w-4" />
+                          )}
+                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => handleEdit(item._id)}
+                            className="text-black hover:text-gray-700 border border-black p-1"
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(item._id)}
+                            disabled={deleteLoading === item._id}
+                            className="text-red-600 hover:text-red-800 border border-red-600 hover:border-red-800 p-1 disabled:opacity-50"
+                            title="Delete"
+                          >
+                            {deleteLoading === item._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex justify-between items-center border-t border-black pt-4">
+            <div className="text-sm text-gray-700">
+              Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} results
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-black text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-black text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {viewingNews && (
+        <ViewNews
+          news={viewingNews}
+          onClose={() => setViewingNews(null)}
+        />
+      )}
+
+      {editingNews && (
+        <EditNews
+          newsId={editingNews}
+          onClose={() => setEditingNews(null)}
+          onSuccess={fetchNews}
+          showAlert={showAlert}
+        />
+      )}
+
+      {viewingComments && (
+        <ViewComments
+          newsId={viewingComments}
+          onClose={() => setViewingComments(null)}
+          showAlert={showAlert}
+        />
+      )}
+    </>
+  );
+};
+
+export default ManageNews;
