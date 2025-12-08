@@ -41,7 +41,13 @@ const ManageEvents: React.FC<ManageEventsProps> = ({ onViewEvent, onEditEvent, s
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [selectedWeekDate, setSelectedWeekDate] = useState<string>('');
+  const [selectedWeekDate, setSelectedWeekDate] = useState<string>(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const canEdit = checkPermission('editEvent');
