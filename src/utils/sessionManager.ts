@@ -4,6 +4,8 @@ import Cookies from 'js-cookie';
 interface Location {
   country: string;
   city: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface SessionData {
@@ -51,6 +53,62 @@ class SessionManager {
     }
   }
 
+  async requestLocationPermission(): Promise<GeolocationPosition | null> {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        console.warn('Geolocation is not supported by this browser');
+        resolve(null);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log('[SessionManager] Location permission granted:', position);
+          resolve(position);
+        },
+        (error) => {
+          console.warn('[SessionManager] Location permission denied or failed:', error.message);
+          resolve(null);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  }
+
+  async getLocationFromCoordinates(latitude: number, longitude: number): Promise<Location> {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NewsPortal/1.0'
+          }
+        }
+      );
+      const data = await response.json();
+
+      return {
+        country: data.address?.country || 'Unknown',
+        city: data.address?.city || data.address?.town || data.address?.village || data.address?.state || 'Unknown',
+        latitude,
+        longitude
+      };
+    } catch (error) {
+      console.error('Failed to get location from coordinates:', error);
+      return {
+        country: 'Unknown',
+        city: 'Unknown',
+        latitude,
+        longitude
+      };
+    }
+  }
+
   getDeviceType(): string {
     const userAgent = navigator.userAgent.toLowerCase();
     if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(userAgent)) {
@@ -62,14 +120,24 @@ class SessionManager {
     return 'web';
   }
 
-  async startSession(): Promise<string | null> {
+  async startSession(geoPosition?: GeolocationPosition | null): Promise<string | null> {
     try {
       console.log('[SessionManager] Starting new session...');
       const ipAddress = await this.getIPAddress();
       console.log('[SessionManager] IP Address:', ipAddress);
 
-      const location = await this.getLocation(ipAddress);
-      console.log('[SessionManager] Location:', location);
+      let location: Location;
+
+      if (geoPosition) {
+        console.log('[SessionManager] Using GPS coordinates for location');
+        const { latitude, longitude } = geoPosition.coords;
+        location = await this.getLocationFromCoordinates(latitude, longitude);
+        console.log('[SessionManager] Location from GPS:', location);
+      } else {
+        console.log('[SessionManager] Using IP-based location');
+        location = await this.getLocation(ipAddress);
+        console.log('[SessionManager] Location from IP:', location);
+      }
 
       const userAgent = navigator.userAgent;
       const deviceType = this.getDeviceType();

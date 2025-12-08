@@ -83,10 +83,15 @@ const Login = () => {
         localStorage.setItem('userId', response.data.user._id);
       }
 
-      // Clear any old session and start a new one
-      console.log('[Login] Clearing any existing session and starting new session...');
+      // Clear any old session and request location permission
+      console.log('[Login] Clearing any existing session and requesting location permission...');
       sessionManager.clearSession();
-      await sessionManager.startSession();
+
+      // Request location permission
+      const geoPosition = await sessionManager.requestLocationPermission();
+
+      // Start session with location data
+      await sessionManager.startSession(geoPosition);
 
       navigate('/dashboard');
     } catch (err: any) {
