@@ -130,10 +130,8 @@ const ManageJustIn: React.FC<ManageJustInProps> = ({ showAlert }) => {
     return (
       <EditJustIn
         justInId={editingJustInId}
-        onClose={() => {
-          setEditingJustInId(null);
-          fetchJustIns();
-        }}
+        onClose={() => setEditingJustInId(null)}
+        onSuccess={fetchJustIns}
         showAlert={showAlert}
       />
     );
