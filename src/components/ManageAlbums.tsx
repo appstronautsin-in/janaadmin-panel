@@ -70,6 +70,9 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
+  const [fileUrl, setFileUrl] = useState('');
+  const [downloadingFromUrl, setDownloadingFromUrl] = useState(false);
 
   useEffect(() => {
     fetchFolders();
@@ -311,6 +314,34 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       setUploadFile(files[0]);
+    }
+  };
+
+  const handleDownloadFromUrl = async () => {
+    if (!fileUrl.trim()) {
+      showAlert('Please enter a valid URL', 'error');
+      return;
+    }
+
+    setDownloadingFromUrl(true);
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error('Failed to download file from URL');
+      }
+
+      const blob = await response.blob();
+      const urlParts = fileUrl.split('/');
+      const filename = urlParts[urlParts.length - 1].split('?')[0] || 'downloaded-file';
+      const file = new File([blob], filename, { type: blob.type });
+
+      setUploadFile(file);
+      showAlert('File downloaded successfully', 'success');
+    } catch (error: any) {
+      console.error('Error downloading file:', error);
+      showAlert('Failed to download file from URL. Please check the URL and try again.', 'error');
+    } finally {
+      setDownloadingFromUrl(false);
     }
   };
 
@@ -823,6 +854,8 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
                   setShowUploadModal(false);
                   setUploadFile(null);
                   setIsDragging(false);
+                  setUploadMode('file');
+                  setFileUrl('');
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -830,70 +863,147 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
               </button>
             </div>
 
+            <div className="flex border border-black mb-4">
+              <button
+                onClick={() => {
+                  setUploadMode('file');
+                  setFileUrl('');
+                }}
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                  uploadMode === 'file'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+              >
+                From Computer
+              </button>
+              <button
+                onClick={() => {
+                  setUploadMode('url');
+                  setUploadFile(null);
+                }}
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                  uploadMode === 'url'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+              >
+                From URL
+              </button>
+            </div>
+
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select File <span className="text-red-600">*</span>
-                </label>
+              {uploadMode === 'file' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select File <span className="text-red-600">*</span>
+                  </label>
 
-                <div
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-                    isDragging
-                      ? 'border-black bg-gray-100 scale-105'
-                      : 'border-gray-300 hover:border-gray-400 bg-white'
-                  }`}
-                >
-                  <input
-                    type="file"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    accept="image/*,video/*,.pdf,.doc,.docx"
-                  />
+                  <div
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+                      isDragging
+                        ? 'border-black bg-gray-100 scale-105'
+                        : 'border-gray-300 hover:border-gray-400 bg-white'
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      accept="image/*,video/*,.pdf,.doc,.docx"
+                    />
 
-                  <div className="flex flex-col items-center">
-                    <Upload className={`h-12 w-12 mb-3 transition-colors ${
-                      isDragging ? 'text-black' : 'text-gray-400'
-                    }`} />
-                    {uploadFile ? (
-                      <div className="space-y-2">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {uploadFile.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatFileSize(uploadFile.size)}
-                        </p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setUploadFile(null);
-                          }}
-                          className="text-xs text-red-600 hover:text-red-800 underline"
-                        >
-                          Remove file
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className={`text-sm font-medium mb-1 ${
-                          isDragging ? 'text-black' : 'text-gray-700'
-                        }`}>
-                          {isDragging ? 'Drop file here' : 'Drag and drop file here'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          or click to browse
-                        </p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          Supports: Images, Videos, PDF, DOC, DOCX
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex flex-col items-center">
+                      <Upload className={`h-12 w-12 mb-3 transition-colors ${
+                        isDragging ? 'text-black' : 'text-gray-400'
+                      }`} />
+                      {uploadFile ? (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {uploadFile.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(uploadFile.size)}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadFile(null);
+                            }}
+                            className="text-xs text-red-600 hover:text-red-800 underline"
+                          >
+                            Remove file
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className={`text-sm font-medium mb-1 ${
+                            isDragging ? 'text-black' : 'text-gray-700'
+                          }`}>
+                            {isDragging ? 'Drop file here' : 'Drag and drop file here'}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            or click to browse
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            Supports: Images, Videos, PDF, DOC, DOCX
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    File URL <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={fileUrl}
+                    onChange={(e) => setFileUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black mb-3"
+                  />
+                  <button
+                    onClick={handleDownloadFromUrl}
+                    disabled={downloadingFromUrl || !fileUrl.trim()}
+                    className="w-full px-4 py-2 border border-black text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-black flex items-center justify-center gap-2"
+                  >
+                    {downloadingFromUrl ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        Download from URL
+                      </>
+                    )}
+                  </button>
+                  {uploadFile && (
+                    <div className="mt-4 p-3 bg-gray-50 border border-gray-300 rounded">
+                      <p className="text-sm font-semibold text-gray-900 mb-1">
+                        {uploadFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(uploadFile.size)}
+                      </p>
+                      <button
+                        onClick={() => setUploadFile(null)}
+                        className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                      >
+                        Remove file
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-3">
                 <button
@@ -902,6 +1012,8 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
                     setShowUploadModal(false);
                     setUploadFile(null);
                     setIsDragging(false);
+                    setUploadMode('file');
+                    setFileUrl('');
                   }}
                   className="px-4 py-2 border border-black text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
                   disabled={uploading}
