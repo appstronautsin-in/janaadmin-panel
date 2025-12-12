@@ -69,6 +69,7 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
   const [filterMode, setFilterMode] = useState<'all' | 'folders' | 'files'>('all');
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     fetchFolders();
@@ -283,6 +284,34 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
       description: folder.description
     });
     setShowEditModal(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      setUploadFile(files[0]);
+    }
   };
 
   const handleSubmitEdit = async (e: React.FormEvent) => {
@@ -793,6 +822,7 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
                 onClick={() => {
                   setShowUploadModal(false);
                   setUploadFile(null);
+                  setIsDragging(false);
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -805,17 +835,64 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select File <span className="text-red-600">*</span>
                 </label>
-                <input
-                  type="file"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="w-full border border-black px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black"
-                  accept="image/*,video/*,.pdf,.doc,.docx"
-                />
-                {uploadFile && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Selected: {uploadFile.name} ({formatFileSize(uploadFile.size)})
-                  </p>
-                )}
+
+                <div
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+                    isDragging
+                      ? 'border-black bg-gray-100 scale-105'
+                      : 'border-gray-300 hover:border-gray-400 bg-white'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    accept="image/*,video/*,.pdf,.doc,.docx"
+                  />
+
+                  <div className="flex flex-col items-center">
+                    <Upload className={`h-12 w-12 mb-3 transition-colors ${
+                      isDragging ? 'text-black' : 'text-gray-400'
+                    }`} />
+                    {uploadFile ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-gray-900">
+                          {uploadFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatFileSize(uploadFile.size)}
+                        </p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadFile(null);
+                          }}
+                          className="text-xs text-red-600 hover:text-red-800 underline"
+                        >
+                          Remove file
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className={`text-sm font-medium mb-1 ${
+                          isDragging ? 'text-black' : 'text-gray-700'
+                        }`}>
+                          {isDragging ? 'Drop file here' : 'Drag and drop file here'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          or click to browse
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          Supports: Images, Videos, PDF, DOC, DOCX
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-3">
@@ -824,6 +901,7 @@ const ManageAlbums: React.FC<ManageAlbumsProps> = ({ onClose, showAlert }) => {
                   onClick={() => {
                     setShowUploadModal(false);
                     setUploadFile(null);
+                    setIsDragging(false);
                   }}
                   className="px-4 py-2 border border-black text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
                   disabled={uploading}
