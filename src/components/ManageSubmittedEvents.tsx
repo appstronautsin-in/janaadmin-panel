@@ -46,7 +46,7 @@ interface ManageSubmittedEventsProps {
 }
 
 const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, showAlert }) => {
-  const { hasPermission } = usePermissions();
+  const { checkPermission } = usePermissions();
   const [events, setEvents] = useState<SubmittedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<SubmittedEvent | null>(null);
@@ -55,7 +55,8 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
   const [statusFilter, setStatusFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('all');
 
   useEffect(() => {
-    if (!hasPermission('manage-events')) {
+    const hasEventPermission = checkPermission('createEvent') || checkPermission('editEvent') || checkPermission('deleteEvent');
+    if (!hasEventPermission) {
       showAlert('You do not have permission to view submitted events', 'error');
       onClose();
       return;
