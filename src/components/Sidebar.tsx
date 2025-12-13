@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, Home, Newspaper, FolderTree, Users, CreditCard, ChevronDown, ChevronRight, FileText, UserCircle, ImagePlus, UserPlus, Activity, AlertTriangle, Database, BarChart3, Receipt, DollarSign, Lightbulb, FileBarChart, ArrowUpDown, Gift, HelpCircle, Eye, Calendar, Send, FileImage, Shield, Settings, MessageSquare, FolderOpen } from 'lucide-react';
+import { LogOut, Home, Newspaper, FolderTree, Users, CreditCard, ChevronDown, ChevronRight, FileText, UserCircle, ImagePlus, UserPlus, Activity, AlertTriangle, Database, BarChart3, Receipt, DollarSign, Lightbulb, FileBarChart, ArrowUpDown, Gift, HelpCircle, Eye, Calendar, Send, FileImage, Shield, Settings, MessageSquare, FolderOpen, Heart } from 'lucide-react';
 import { usePermissions } from '../middleware/PermissionsMiddleware';
 import { logActivity, ActivityActions, ActivitySections } from '../utils/activityLogger';
 
@@ -86,6 +86,7 @@ interface SidebarProps {
   onShowSystemSettings: () => void;
   onShowManageComments: () => void;
   onShowManageAlbums: () => void;
+  onShowManageSubmittedObituary: () => void;
   onLogout: () => void;
 }
 
@@ -172,6 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onShowSystemSettings,
   onShowManageComments,
   onShowManageAlbums,
+  onShowManageSubmittedObituary,
   onLogout
 }) => {
   const { loading, checkPermission } = usePermissions();
@@ -974,6 +976,17 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Send className="h-5 w-5 mr-3" />
             <span className="flex-1 text-left">Submitted News</span>
           </button>
+
+          {/* Submitted Obituary - Only for users with all News permissions */}
+          {hasAllPermissions && (
+            <button
+              onClick={() => handleNavigation(onShowManageSubmittedObituary, ActivitySections.SUBMITTED_NEWS, 'Accessed Submitted Obituary')}
+              className="flex items-center w-full px-4 py-2 text-gray-600 hover:bg-gray-50 border border-transparent hover:border-black transition-colors duration-200"
+            >
+              <Heart className="h-5 w-5 mr-3" />
+              <span className="flex-1 text-left">Submitted Obituary</span>
+            </button>
+          )}
 
           {/* Subscription */}
           {hasSubscriptionPermissions && (

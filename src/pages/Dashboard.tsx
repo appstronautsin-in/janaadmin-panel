@@ -53,6 +53,7 @@ import EditEvent from '../components/EditEvent';
 import ViewEvent from '../components/ViewEvent';
 import ManageSubmittedNews from '../components/ManageSubmittedNews';
 import ManageSubmittedEvents from '../components/ManageSubmittedEvents';
+import ManageSubmittedObituary from '../components/ManageSubmittedObituary';
 import GenerateClassified from '../components/GenerateClassified';
 import ManageSessionLogs from '../components/ManageSessionLogs';
 import SystemSettings from '../components/SystemSettings';
@@ -512,6 +513,13 @@ const Dashboard = () => {
           />
         );
 
+      case 'manageSubmittedObituary':
+        return (
+          <ManageSubmittedObituary
+            showAlert={showAlertMessage}
+          />
+        );
+
       case 'generateClassified':
         return <GenerateClassified />;
 
@@ -653,6 +661,7 @@ const Dashboard = () => {
           onShowSystemSettings={() => handleShowView('systemSettings')}
           onShowManageComments={() => handleShowView('manageComments')}
           onShowManageAlbums={() => handleShowView('manageAlbums')}
+          onShowManageSubmittedObituary={() => handleShowView('manageSubmittedObituary')}
           onShowDashboard={() => handleShowView('dashboard')}
           onLogout={handleLogout}
         />
