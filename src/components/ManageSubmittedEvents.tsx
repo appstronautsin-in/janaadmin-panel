@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Eye, Check, XCircle, Calendar, MapPin, DollarSign, ExternalLink, Loader2, Filter, X } from 'lucide-react';
+import { RefreshCw, Eye, Check, XCircle, Calendar, MapPin, DollarSign, ExternalLink, Loader2, Filter, X, Copy, Download } from 'lucide-react';
 import axios from '../config/axios';
 import { usePermissions } from '../middleware/PermissionsMiddleware';
 
@@ -143,6 +143,33 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ showAlert
     return statusStyles[status as keyof typeof statusStyles] || 'bg-gray-100 text-gray-800';
   };
 
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showAlert(`${label} copied to clipboard`, 'success');
+    } catch (error) {
+      showAlert('Failed to copy to clipboard', 'error');
+    }
+  };
+
+  const downloadImage = async (imageUrl: string, index: number) => {
+    try {
+      const response = await fetch(`https://laqsya.com/${imageUrl}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `event-image-${index + 1}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      showAlert('Image downloaded successfully', 'success');
+    } catch (error) {
+      showAlert('Failed to download image', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -169,13 +196,21 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ showAlert
           </div>
 
           <div className="p-6 space-y-6">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedEvent.title}</h3>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadge(selectedEvent.status)}`}>
-                  {selectedEvent.status.charAt(0).toUpperCase() + selectedEvent.status.slice(1)}
-                </span>
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-2xl font-bold text-gray-900 flex-1">{selectedEvent.title}</h3>
+                <button
+                  onClick={() => copyToClipboard(selectedEvent.title, 'Title')}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 transition-colors"
+                  title="Copy title to clipboard"
+                >
+                  <Copy size={16} />
+                  <span className="text-sm">Copy</span>
+                </button>
               </div>
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadge(selectedEvent.status)}`}>
+                {selectedEvent.status.charAt(0).toUpperCase() + selectedEvent.status.slice(1)}
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -216,7 +251,17 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ showAlert
 
             {selectedEvent.description && (
               <div className="space-y-2">
-                <h4 className="font-semibold text-gray-900">Description</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-gray-900">Description</h4>
+                  <button
+                    onClick={() => copyToClipboard(selectedEvent.description, 'Description')}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 transition-colors text-sm"
+                    title="Copy description to clipboard"
+                  >
+                    <Copy size={14} />
+                    Copy
+                  </button>
+                </div>
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                   <p className="text-gray-700 whitespace-pre-wrap">{selectedEvent.description}</p>
                 </div>
@@ -228,7 +273,7 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ showAlert
                 <h4 className="font-semibold text-gray-900">Images ({selectedEvent.image.length})</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedEvent.image.map((img, index) => (
-                    <div key={index} className="border border-gray-300 rounded overflow-hidden">
+                    <div key={index} className="border border-gray-300 rounded overflow-hidden relative group">
                       <img
                         src={`https://laqsya.com/${img}`}
                         alt={`Event ${index + 1}`}
@@ -237,6 +282,16 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ showAlert
                           e.currentTarget.src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
                         }}
                       />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                        <button
+                          onClick={() => downloadImage(img, index)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-900 px-4 py-2 flex items-center gap-2 hover:bg-gray-100"
+                          title="Download image"
+                        >
+                          <Download size={18} />
+                          Download
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
