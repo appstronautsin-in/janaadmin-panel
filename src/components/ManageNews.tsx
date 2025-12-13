@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Loader2, X, Eye, Filter, Search, Facebook, MessageSquare } from 'lucide-react';
+import { Pencil, Trash2, Loader2, X, Eye, Filter, Search, Facebook, MessageSquare, EyeOff, BarChart3 } from 'lucide-react';
 import api from '../config/axios';
 import { IMAGE_BASE_URL } from '../config/constants';
 import ViewNews from './ViewNews';
@@ -39,6 +39,9 @@ interface News {
   content: string;
   tags: string[];
   views: number;
+  viewsEnabled?: boolean;
+  viewsVisible?: boolean;
+  viewsCountVisible?: boolean;
   status: 'Draft' | 'Approved' | 'Scheduled' | 'Published' | 'Rejected';
   shareable: boolean;
   isAllowedScreenshot: boolean;
@@ -72,6 +75,7 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const [postingToFacebook, setPostingToFacebook] = useState<string | null>(null);
+  const [updatingViews, setUpdatingViews] = useState<{ id: string; type: string } | null>(null);
 
   const { checkPermission } = usePermissions();
   const canCreate = checkPermission('createNews');
@@ -213,6 +217,40 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
       showAlert(error.response?.data?.message || 'Failed to post to Facebook', 'error');
     } finally {
       setPostingToFacebook(null);
+    }
+  };
+
+  const handleToggleViewsSetting = async (id: string, type: 'viewsEnabled' | 'viewsVisible' | 'viewsCountVisible', currentValue: boolean) => {
+    if (!canEdit) {
+      showAlert('You do not have permission to edit news settings', 'error');
+      return;
+    }
+
+    setUpdatingViews({ id, type });
+    try {
+      const newsItem = news.find(n => n._id === id);
+      await api.put(`/v1/news/${id}`, { [type]: !currentValue });
+
+      const settingNames = {
+        viewsEnabled: 'Views Enabled',
+        viewsVisible: 'Views Visible',
+        viewsCountVisible: 'Views Count Visible'
+      };
+
+      await logActivity(
+        ActivityActions.UPDATE,
+        ActivitySections.NEWS,
+        `Updated ${settingNames[type]} for news: ${newsItem?.title || 'Unknown'}`,
+        { newsId: id, setting: type, value: !currentValue }
+      );
+
+      await fetchNews();
+      showAlert(`${settingNames[type]} updated successfully`, 'success');
+    } catch (error: any) {
+      console.error('Error updating views setting:', error);
+      showAlert(error.response?.data?.message || 'Failed to update setting', 'error');
+    } finally {
+      setUpdatingViews(null);
     }
   };
 
@@ -405,6 +443,60 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
                           >
                             <MessageSquare className="h-4 w-4" />
                           </button>
+                        )}
+                        {canEdit && (
+                          <>
+                            <button
+                              onClick={() => handleToggleViewsSetting(item._id, 'viewsEnabled', item.viewsEnabled ?? true)}
+                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsEnabled'}
+                              className={`border p-1 disabled:opacity-50 ${
+                                item.viewsEnabled !== false
+                                  ? 'text-green-600 hover:text-green-800 border-green-600 hover:border-green-800'
+                                  : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
+                              }`}
+                              title={`Views Enabled: ${item.viewsEnabled !== false ? 'ON' : 'OFF'}`}
+                            >
+                              {updatingViews?.id === item._id && updatingViews.type === 'viewsEnabled' ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : item.viewsEnabled !== false ? (
+                                <Eye className="h-4 w-4" />
+                              ) : (
+                                <EyeOff className="h-4 w-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleToggleViewsSetting(item._id, 'viewsVisible', item.viewsVisible ?? true)}
+                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsVisible'}
+                              className={`border p-1 disabled:opacity-50 ${
+                                item.viewsVisible !== false
+                                  ? 'text-purple-600 hover:text-purple-800 border-purple-600 hover:border-purple-800'
+                                  : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
+                              }`}
+                              title={`Views Visible: ${item.viewsVisible !== false ? 'ON' : 'OFF'}`}
+                            >
+                              {updatingViews?.id === item._id && updatingViews.type === 'viewsVisible' ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleToggleViewsSetting(item._id, 'viewsCountVisible', item.viewsCountVisible ?? true)}
+                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsCountVisible'}
+                              className={`border p-1 disabled:opacity-50 ${
+                                item.viewsCountVisible !== false
+                                  ? 'text-orange-600 hover:text-orange-800 border-orange-600 hover:border-orange-800'
+                                  : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
+                              }`}
+                              title={`Views Count Visible: ${item.viewsCountVisible !== false ? 'ON' : 'OFF'}`}
+                            >
+                              {updatingViews?.id === item._id && updatingViews.type === 'viewsCountVisible' ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <BarChart3 className="h-4 w-4" />
+                              )}
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => handlePostToFacebook(item._id)}
