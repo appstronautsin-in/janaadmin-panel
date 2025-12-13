@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw } from 'lucide-react';
+import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../config/axios';
 
 interface ViewsAnalyticsProps {
@@ -35,17 +36,35 @@ interface ClassifiedAdItem {
   createdAt: string;
 }
 
+interface EPaperViewItem {
+  _id: string;
+  customerId: {
+    _id: string;
+    email: string;
+  } | string;
+  sessionTime: number;
+  pageNumber: number;
+  ePaper: {
+    _id: string;
+    title: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
-  const [activeTab, setActiveTab] = useState<'news' | 'classified'>('news');
+  const [activeTab, setActiveTab] = useState<'news' | 'classified' | 'epaper'>('news');
   const [loading, setLoading] = useState(true);
   const [newsData, setNewsData] = useState<NewsItem[]>([]);
   const [classifiedData, setClassifiedData] = useState<ClassifiedAdItem[]>([]);
+  const [epaperData, setEpaperData] = useState<EPaperViewItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [phoneSearch, setPhoneSearch] = useState<string>('');
   const [categoryLoading, setCategoryLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [epaperDateFilter, setEpaperDateFilter] = useState<string>('');
   const [classifiedCategories] = useState<string[]>([
     'Wanted',
     'Real Estate',
@@ -63,10 +82,12 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   useEffect(() => {
     if (activeTab === 'news') {
       fetchNewsData();
-    } else {
+    } else if (activeTab === 'classified') {
       fetchClassifiedData();
+    } else if (activeTab === 'epaper') {
+      fetchEpaperData();
     }
-  }, [activeTab, selectedCategory, phoneSearch, dateFilter]);
+  }, [activeTab, selectedCategory, phoneSearch, dateFilter, epaperDateFilter]);
 
   const fetchNewsData = async () => {
     setLoading(true);
@@ -174,6 +195,25 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     }
   };
 
+  const fetchEpaperData = async () => {
+    setLoading(true);
+    try {
+      let url = '/v1/epaper-views/';
+      if (epaperDateFilter) {
+        url = `/v1/epaper-views/by-date/${epaperDateFilter}`;
+      }
+
+      const response = await api.get(url);
+      const data = epaperDateFilter ? response.data.data : response.data;
+      setEpaperData(data || []);
+    } catch (error) {
+      console.error('Error fetching epaper data:', error);
+      showAlert('Failed to fetch epaper data', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -185,15 +225,42 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   const getTotalViews = () => {
     if (activeTab === 'news') {
       return newsData.reduce((sum, item) => sum + item.views, 0);
-    } else {
+    } else if (activeTab === 'classified') {
       return classifiedData.reduce((sum, item) => sum + (item.views || 0), 0);
+    } else {
+      return epaperData.length;
     }
   };
 
   const getAverageViews = () => {
     const total = getTotalViews();
-    const count = activeTab === 'news' ? newsData.length : classifiedData.length;
+    const count = activeTab === 'news' ? newsData.length : activeTab === 'classified' ? classifiedData.length : epaperData.length;
     return count > 0 ? (total / count).toFixed(2) : '0';
+  };
+
+  const getEpaperPageViews = () => {
+    const pageViews: { [key: number]: number } = {};
+    epaperData.forEach(item => {
+      pageViews[item.pageNumber] = (pageViews[item.pageNumber] || 0) + 1;
+    });
+    return Object.entries(pageViews)
+      .map(([page, views]) => ({ page: `Page ${page}`, views }))
+      .sort((a, b) => parseInt(a.page.split(' ')[1]) - parseInt(b.page.split(' ')[1]));
+  };
+
+  const getEpaperTitles = () => {
+    const titleViews: { [key: string]: number } = {};
+    epaperData.forEach(item => {
+      const title = item.ePaper.title;
+      titleViews[title] = (titleViews[title] || 0) + 1;
+    });
+    return Object.entries(titleViews)
+      .map(([title, views]) => ({ title, views }))
+      .sort((a, b) => b.views - a.views);
+  };
+
+  const getTotalSessionTime = () => {
+    return epaperData.reduce((sum, item) => sum + item.sessionTime, 0);
   };
 
   const handleRefresh = async () => {
@@ -201,8 +268,10 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     try {
       if (activeTab === 'news') {
         await fetchNewsData();
-      } else {
+      } else if (activeTab === 'classified') {
         await fetchClassifiedData();
+      } else if (activeTab === 'epaper') {
+        await fetchEpaperData();
       }
       showAlert('Data refreshed successfully', 'success');
     } catch (error) {
@@ -213,12 +282,14 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     }
   };
 
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658', '#ff7c7c'];
+
   return (
     <div className="h-full overflow-auto bg-gray-50">
       <div className="p-6 border-b border-black bg-white flex justify-between items-start">
         <div>
           <h2 className="text-2xl font-bold">Views Analytics</h2>
-          <p className="text-sm text-gray-600 mt-1">Track views for news and classified ads</p>
+          <p className="text-sm text-gray-600 mt-1">Track views for news, classified ads, and e-papers</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -261,40 +332,58 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
         >
           Classified Ads
         </button>
+        <button
+          onClick={() => {
+            setActiveTab('epaper');
+            setSelectedCategory('all');
+            setPhoneSearch('');
+            setDateFilter('all');
+            setEpaperDateFilter('');
+          }}
+          className={`flex-1 px-6 py-3 font-medium transition-colors ${
+            activeTab === 'epaper'
+              ? 'bg-black text-white'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          E-Paper Views
+        </button>
       </div>
 
       <div className="p-6 border-b border-black bg-white space-y-4">
-        <div className="flex items-center gap-4">
-          <Filter className="h-5 w-5 text-gray-600" />
-          <label className="text-sm font-medium text-gray-700">Filter by Category:</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black min-w-[200px]"
-            disabled={categoryLoading && activeTab === 'news'}
-          >
-            <option value="all">All Categories</option>
-            {activeTab === 'news' ? (
-              categoryLoading ? (
-                <option disabled>Loading categories...</option>
-              ) : categories.length > 0 ? (
-                categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
+        {activeTab !== 'epaper' && (
+          <div className="flex items-center gap-4">
+            <Filter className="h-5 w-5 text-gray-600" />
+            <label className="text-sm font-medium text-gray-700">Filter by Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black min-w-[200px]"
+              disabled={categoryLoading && activeTab === 'news'}
+            >
+              <option value="all">All Categories</option>
+              {activeTab === 'news' ? (
+                categoryLoading ? (
+                  <option disabled>Loading categories...</option>
+                ) : categories.length > 0 ? (
+                  categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>No categories found</option>
+                )
+              ) : (
+                classifiedCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
                   </option>
                 ))
-              ) : (
-                <option disabled>No categories found</option>
-              )
-            ) : (
-              classifiedCategories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
+              )}
+            </select>
+          </div>
+        )}
 
         {activeTab === 'classified' && (
           <>
@@ -334,24 +423,66 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             </div>
           </>
         )}
+
+        {activeTab === 'epaper' && (
+          <div className="flex items-center gap-4">
+            <Filter className="h-5 w-5 text-gray-600" />
+            <label className="text-sm font-medium text-gray-700">Filter by Date:</label>
+            <input
+              type="date"
+              value={epaperDateFilter}
+              onChange={(e) => setEpaperDateFilter(e.target.value)}
+              className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            {epaperDateFilter && (
+              <button
+                onClick={() => setEpaperDateFilter('')}
+                className="px-3 py-2 text-sm border border-black text-gray-700 hover:bg-gray-50"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4 p-6 border-b border-black bg-white">
-        <div className="text-center">
-          <p className="text-sm text-gray-600">Total Items</p>
-          <p className="text-2xl font-bold text-gray-900">
-            {activeTab === 'news' ? newsData.length : classifiedData.length}
-          </p>
+      {activeTab === 'epaper' ? (
+        <div className="grid grid-cols-4 gap-4 p-6 border-b border-black bg-white">
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Views</p>
+            <p className="text-2xl font-bold text-gray-900">{epaperData.length}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Unique E-Papers</p>
+            <p className="text-2xl font-bold text-gray-900">{getEpaperTitles().length}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Pages Viewed</p>
+            <p className="text-2xl font-bold text-gray-900">{getEpaperPageViews().length}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Session Time</p>
+            <p className="text-2xl font-bold text-gray-900">{getTotalSessionTime()}s</p>
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-gray-600">Total Views</p>
-          <p className="text-2xl font-bold text-gray-900">{getTotalViews().toLocaleString()}</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-4 p-6 border-b border-black bg-white">
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Items</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {activeTab === 'news' ? newsData.length : classifiedData.length}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Views</p>
+            <p className="text-2xl font-bold text-gray-900">{getTotalViews().toLocaleString()}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Average Views</p>
+            <p className="text-2xl font-bold text-gray-900">{getAverageViews()}</p>
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-sm text-gray-600">Average Views</p>
-          <p className="text-2xl font-bold text-gray-900">{getAverageViews()}</p>
-        </div>
-      </div>
+      )}
 
       <div className="p-6">
         {loading ? (
@@ -359,7 +490,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             <Loader2 className="h-8 w-8 animate-spin text-black" />
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-6">
             {activeTab === 'news' ? (
               newsData.length > 0 ? (
                 <div className="border border-black bg-white">
@@ -403,7 +534,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                   <p className="text-gray-500 text-lg">No news found</p>
                 </div>
               )
-            ) : (
+            ) : activeTab === 'classified' ? (
               classifiedData.length > 0 ? (
                 <div className="border border-black bg-white overflow-x-auto">
                   <table className="w-full">
@@ -474,6 +605,89 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                 <div className="text-center py-12">
                   <Eye className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 text-lg">No classified ads found</p>
+                </div>
+              )
+            ) : (
+              epaperData.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="border border-black bg-white p-4">
+                      <h3 className="text-lg font-semibold mb-4 text-center">Views by Page</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={getEpaperPageViews()}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="page" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="views" fill="#0088FE" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="border border-black bg-white p-4">
+                      <h3 className="text-lg font-semibold mb-4 text-center">Views by E-Paper Title</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={getEpaperTitles()}
+                            dataKey="views"
+                            nameKey="title"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            label={(entry) => `${entry.title}: ${entry.views}`}
+                          >
+                            {getEpaperTitles().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="border border-black bg-white overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-black">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">#</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Customer Email</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">E-Paper Title</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Page Number</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Session Time (s)</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Viewed At</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {epaperData.map((item, index) => (
+                          <tr key={item._id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm text-gray-900">#{index + 1}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {typeof item.customerId === 'object' ? item.customerId.email : 'N/A'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.ePaper.title}</td>
+                            <td className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
+                              {item.pageNumber}
+                            </td>
+                            <td className="px-4 py-3 text-center text-sm text-gray-900">
+                              {item.sessionTime}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {formatDate(item.createdAt)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No e-paper views found</p>
                 </div>
               )
             )}
