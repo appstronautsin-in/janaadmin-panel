@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Loader2, X, Eye, Filter, Search, Facebook, MessageSquare, MessageSquareOff, EyeOff, BarChart3 } from 'lucide-react';
+import { Pencil, Trash2, Loader2, X, Eye, Filter, Search, Facebook, MessageSquare, EyeOff, BarChart3 } from 'lucide-react';
 import api from '../config/axios';
 import { IMAGE_BASE_URL } from '../config/constants';
 import ViewNews from './ViewNews';
@@ -574,7 +574,7 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
                               ) : item.commentsVisible ? (
                                 <MessageSquare className="h-4 w-4" />
                               ) : (
-                                <MessageSquareOff className="h-4 w-4" />
+                                <MessageSquare className="h-4 w-4" />
                               )}
                             </button>
                           </>
