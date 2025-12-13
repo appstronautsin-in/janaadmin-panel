@@ -17,6 +17,7 @@ interface Customer {
   isAppleLogin: boolean;
   isSubcribed: boolean;
   spam?: boolean;
+  attachedTrail?: boolean;
   lastlogin: string;
   createdAt: string;
   updatedAt: string;
@@ -45,6 +46,7 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
   const [searchTerm, setSearchTerm] = useState('');
   const [searchById, setSearchById] = useState('');
   const [subscriptionFilter, setSubscriptionFilter] = useState<'all' | 'subscribed' | 'unsubscribed'>('all');
+  const [trailFilter, setTrailFilter] = useState<'all' | 'with_trail' | 'without_trail'>('all');
   const [dateFilter, setDateFilter] = useState<'recent' | 'old' | 'new'>('recent');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -68,6 +70,13 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
     if (subscriptionFilter !== 'all') {
       filtered = filtered.filter(customer =>
         subscriptionFilter === 'subscribed' ? customer.isSubcribed : !customer.isSubcribed
+      );
+    }
+
+    // Apply trail filter
+    if (trailFilter !== 'all') {
+      filtered = filtered.filter(customer =>
+        trailFilter === 'with_trail' ? customer.attachedTrail : !customer.attachedTrail
       );
     }
 
@@ -105,7 +114,7 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
     setFilteredCustomers(filtered);
     setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE));
     setCurrentPage(1); // Reset to first page when filters change
-  }, [customers, searchTerm, searchById, subscriptionFilter, dateFilter]);
+  }, [customers, searchTerm, searchById, subscriptionFilter, trailFilter, dateFilter]);
 
   const fetchCustomers = async () => {
     try {
@@ -267,7 +276,20 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
     <>
       <div className="bg-white border border-black shadow-lg p-6">
         <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Manage Customers</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Manage Customers</h2>
+            <div className="mt-2 flex gap-4 text-sm">
+              <span className="text-gray-600">
+                Total Customers: <span className="font-semibold text-gray-900">{customers.length}</span>
+              </span>
+              <span className="text-gray-600">
+                Subscribed: <span className="font-semibold text-green-700">{customers.filter(c => c.isSubcribed).length}</span>
+              </span>
+              <span className="text-gray-600">
+                With Trail: <span className="font-semibold text-blue-700">{customers.filter(c => c.attachedTrail).length}</span>
+              </span>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <button
               onClick={handleRefresh}
@@ -326,6 +348,18 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
               <option value="all">All Customers</option>
               <option value="subscribed">Subscribed Only</option>
               <option value="unsubscribed">Unsubscribed Only</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 min-w-[200px]">
+            <select
+              value={trailFilter}
+              onChange={(e) => setTrailFilter(e.target.value as 'all' | 'with_trail' | 'without_trail')}
+              className="flex-1 border border-black rounded px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+            >
+              <option value="all">All Trail Status</option>
+              <option value="with_trail">With Trail</option>
+              <option value="without_trail">Without Trail</option>
             </select>
           </div>
 
