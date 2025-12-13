@@ -230,7 +230,16 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     setUpdatingViews({ id, type: 'viewsVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { viewsVisible: !currentValue });
+
+      const response = await api.get(`/v1/news/${id}`);
+      const fullNewsData = response.data;
+
+      const updatedData = {
+        ...fullNewsData,
+        viewsVisible: !currentValue
+      };
+
+      await api.put(`/v1/news/${id}`, updatedData);
 
       await logActivity(
         ActivityActions.UPDATE,
@@ -258,7 +267,16 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     setUpdatingViews({ id, type: 'viwsCountToVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { viwsCountToVisible: value });
+
+      const response = await api.get(`/v1/news/${id}`);
+      const fullNewsData = response.data;
+
+      const updatedData = {
+        ...fullNewsData,
+        viwsCountToVisible: value
+      };
+
+      await api.put(`/v1/news/${id}`, updatedData);
 
       await logActivity(
         ActivityActions.UPDATE,
@@ -287,7 +305,16 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     setUpdatingViews({ id, type: 'commentsVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { commentsVisible: !currentValue });
+
+      const response = await api.get(`/v1/news/${id}`);
+      const fullNewsData = response.data;
+
+      const updatedData = {
+        ...fullNewsData,
+        commentsVisible: !currentValue
+      };
+
+      await api.put(`/v1/news/${id}`, updatedData);
 
       await logActivity(
         ActivityActions.UPDATE,
