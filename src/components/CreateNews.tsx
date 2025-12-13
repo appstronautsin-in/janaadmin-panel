@@ -82,27 +82,28 @@ const CreateNews: React.FC<CreateNewsProps> = ({ onClose, showAlert }) => {
     };
   };
 
-  const initialDateTime = getInitialDateTime();
-
-  const [formData, setFormData] = useState({
-    category: '',
-    subCategory: '',
-    authors: [] as string[],
-    title: '',
-    subTitle: '',
-    tags: [] as string[],
-    status: 'Published' as Status,
-    shareable: true,
-    isAllowedScreenshot: true,
-    isPremiuimContent: false,
-    addedBy: localStorage.getItem('userId') || '',
-    publishDate: initialDateTime.date,
-    publishTime: initialDateTime.time,
-    scheduleDate: '',
-    scheduleTime: '',
-    viewsVisible: false,
-    visibleComment: false,
-    viwsCountToVisible: 0
+  const [formData, setFormData] = useState(() => {
+    const initialDateTime = getInitialDateTime();
+    return {
+      category: '',
+      subCategory: '',
+      authors: [] as string[],
+      title: '',
+      subTitle: '',
+      tags: [] as string[],
+      status: 'Published' as Status,
+      shareable: true,
+      isAllowedScreenshot: true,
+      isPremiuimContent: false,
+      addedBy: localStorage.getItem('userId') || '',
+      publishDate: initialDateTime.date,
+      publishTime: initialDateTime.time,
+      scheduleDate: '',
+      scheduleTime: '',
+      viewsVisible: false,
+      visibleComment: false,
+      viwsCountToVisible: 0
+    };
   });
 
   const modules = {
