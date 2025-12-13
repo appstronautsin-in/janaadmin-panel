@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Edit, Trash2, ImageIcon } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, ImageIcon, MessageSquare } from 'lucide-react';
 import axios from '../config/axios';
 import { usePermissions } from '../middleware/PermissionsMiddleware';
+import ViewDoYouKnowComments from './ViewDoYouKnowComments';
 
 interface DoYouKnow {
   _id: string;
@@ -28,6 +29,7 @@ const ManageDoYouKnow: React.FC<ManageDoYouKnowProps> = ({ onView, onEdit, showA
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [viewingComments, setViewingComments] = useState<{ id: string; title: string } | null>(null);
 
   const { checkPermission } = usePermissions();
   const canEdit = checkPermission('editDoYouKnow');
@@ -144,6 +146,13 @@ const ManageDoYouKnow: React.FC<ManageDoYouKnowProps> = ({ onView, onEdit, showA
                     <Eye className="h-4 w-4" />
                     View
                   </button>
+                  <button
+                    onClick={() => setViewingComments({ id: item._id, title: item.title })}
+                    className="px-3 py-1.5 border border-blue-600 text-blue-600 text-sm hover:bg-blue-50 flex items-center justify-center"
+                    title="View Comments"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
                   {canEdit && (
                     <button
                       onClick={() => onEdit(item)}
@@ -191,6 +200,15 @@ const ManageDoYouKnow: React.FC<ManageDoYouKnowProps> = ({ onView, onEdit, showA
             </div>
           </div>
         </div>
+      )}
+
+      {viewingComments && (
+        <ViewDoYouKnowComments
+          doYouKnowId={viewingComments.id}
+          doYouKnowTitle={viewingComments.title}
+          onClose={() => setViewingComments(null)}
+          showAlert={showAlert}
+        />
       )}
     </div>
   );
