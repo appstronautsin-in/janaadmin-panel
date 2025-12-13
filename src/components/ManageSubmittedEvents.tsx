@@ -67,7 +67,7 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/v1/submit-event/submitted');
+      const response = await axios.get('/v1/submit-event/submitted');
       if (response.data.success) {
         setEvents(response.data.events);
       }
