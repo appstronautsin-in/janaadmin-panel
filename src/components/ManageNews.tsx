@@ -41,6 +41,7 @@ interface News {
   views: number;
   viewsVisible?: boolean;
   viwsCountToVisible?: number;
+  commentsVisible?: boolean;
   status: 'Draft' | 'Approved' | 'Scheduled' | 'Published' | 'Rejected';
   shareable: boolean;
   isAllowedScreenshot: boolean;
@@ -277,14 +278,46 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     }
   };
 
+  const handleToggleCommentsVisible = async (id: string, currentValue: boolean) => {
+    if (!canEdit) {
+      showAlert('You do not have permission to edit news settings', 'error');
+      return;
+    }
+
+    setUpdatingViews({ id, type: 'commentsVisible' });
+    try {
+      const newsItem = news.find(n => n._id === id);
+      await api.put(`/v1/news/${id}`, { commentsVisible: !currentValue });
+
+      await logActivity(
+        ActivityActions.UPDATE,
+        ActivitySections.NEWS,
+        `Updated Comments Visible for news: ${newsItem?.title || 'Unknown'}`,
+        { newsId: id, setting: 'commentsVisible', value: !currentValue }
+      );
+
+      await fetchNews();
+      showAlert('Comments Visible updated successfully', 'success');
+    } catch (error: any) {
+      console.error('Error updating comments visible:', error);
+      showAlert(error.response?.data?.message || 'Failed to update setting', 'error');
+    } finally {
+      setUpdatingViews(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    const formattedHours = String(hours12).padStart(2, '0');
+
+    return `${day}-${month}-${year}:${formattedHours}:${minutes}${ampm}`;
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -446,7 +479,7 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-r border-black">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500 border-r border-black">
                       {formatDate(item.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -526,6 +559,24 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
                                 <BarChart3 className="h-4 w-4" />
                               </button>
                             )}
+                            <button
+                              onClick={() => handleToggleCommentsVisible(item._id, item.commentsVisible ?? false)}
+                              disabled={updatingViews?.id === item._id && updatingViews.type === 'commentsVisible'}
+                              className={`border p-1 disabled:opacity-50 ${
+                                item.commentsVisible
+                                  ? 'text-purple-600 hover:text-purple-800 border-purple-600 hover:border-purple-800'
+                                  : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
+                              }`}
+                              title={`Comments Visible: ${item.commentsVisible ? 'ON' : 'OFF'}`}
+                            >
+                              {updatingViews?.id === item._id && updatingViews.type === 'commentsVisible' ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : item.commentsVisible ? (
+                                <MessageSquare className="h-4 w-4" />
+                              ) : (
+                                <MessageSquare className="h-4 w-4" />
+                              )}
+                            </button>
                           </>
                         )}
                         <button
