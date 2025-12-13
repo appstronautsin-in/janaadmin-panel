@@ -39,9 +39,8 @@ interface News {
   content: string;
   tags: string[];
   views: number;
-  viewsEnabled?: boolean;
   viewsVisible?: boolean;
-  viewsCountVisible?: boolean;
+  viwsCountToVisible?: number;
   status: 'Draft' | 'Approved' | 'Scheduled' | 'Published' | 'Rejected';
   shareable: boolean;
   isAllowedScreenshot: boolean;
@@ -76,6 +75,7 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const [postingToFacebook, setPostingToFacebook] = useState<string | null>(null);
   const [updatingViews, setUpdatingViews] = useState<{ id: string; type: string } | null>(null);
+  const [editingViewsCount, setEditingViewsCount] = useState<{ id: string; value: number } | null>(null);
 
   const { checkPermission } = usePermissions();
   const canCreate = checkPermission('createNews');
@@ -220,34 +220,57 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     }
   };
 
-  const handleToggleViewsSetting = async (id: string, type: 'viewsEnabled' | 'viewsVisible' | 'viewsCountVisible', currentValue: boolean) => {
+  const handleToggleViewsVisible = async (id: string, currentValue: boolean) => {
     if (!canEdit) {
       showAlert('You do not have permission to edit news settings', 'error');
       return;
     }
 
-    setUpdatingViews({ id, type });
+    setUpdatingViews({ id, type: 'viewsVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { [type]: !currentValue });
-
-      const settingNames = {
-        viewsEnabled: 'Views Enabled',
-        viewsVisible: 'Views Visible',
-        viewsCountVisible: 'Views Count Visible'
-      };
+      await api.put(`/v1/news/${id}`, { viewsVisible: !currentValue });
 
       await logActivity(
         ActivityActions.UPDATE,
         ActivitySections.NEWS,
-        `Updated ${settingNames[type]} for news: ${newsItem?.title || 'Unknown'}`,
-        { newsId: id, setting: type, value: !currentValue }
+        `Updated Views Visible for news: ${newsItem?.title || 'Unknown'}`,
+        { newsId: id, setting: 'viewsVisible', value: !currentValue }
       );
 
       await fetchNews();
-      showAlert(`${settingNames[type]} updated successfully`, 'success');
+      showAlert('Views Visible updated successfully', 'success');
     } catch (error: any) {
-      console.error('Error updating views setting:', error);
+      console.error('Error updating views visible:', error);
+      showAlert(error.response?.data?.message || 'Failed to update setting', 'error');
+    } finally {
+      setUpdatingViews(null);
+    }
+  };
+
+  const handleUpdateViewsCount = async (id: string, value: number) => {
+    if (!canEdit) {
+      showAlert('You do not have permission to edit news settings', 'error');
+      return;
+    }
+
+    setUpdatingViews({ id, type: 'viwsCountToVisible' });
+    try {
+      const newsItem = news.find(n => n._id === id);
+      await api.put(`/v1/news/${id}`, { viwsCountToVisible: value });
+
+      await logActivity(
+        ActivityActions.UPDATE,
+        ActivitySections.NEWS,
+        `Updated Views Count To Visible for news: ${newsItem?.title || 'Unknown'}`,
+        { newsId: id, setting: 'viwsCountToVisible', value }
+      );
+
+      await fetchNews();
+      showAlert('Views Count To Visible updated successfully', 'success');
+      setEditingViewsCount(null);
+    } catch (error: any) {
+      console.error('Error updating views count:', error);
       showAlert(error.response?.data?.message || 'Failed to update setting', 'error');
     } finally {
       setUpdatingViews(null);
@@ -447,55 +470,62 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
                         {canEdit && (
                           <>
                             <button
-                              onClick={() => handleToggleViewsSetting(item._id, 'viewsEnabled', item.viewsEnabled ?? true)}
-                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsEnabled'}
+                              onClick={() => handleToggleViewsVisible(item._id, item.viewsVisible ?? false)}
+                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsVisible'}
                               className={`border p-1 disabled:opacity-50 ${
-                                item.viewsEnabled !== false
+                                item.viewsVisible
                                   ? 'text-green-600 hover:text-green-800 border-green-600 hover:border-green-800'
                                   : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
                               }`}
-                              title={`Views Enabled: ${item.viewsEnabled !== false ? 'ON' : 'OFF'}`}
+                              title={`Views Visible: ${item.viewsVisible ? 'ON' : 'OFF'}`}
                             >
-                              {updatingViews?.id === item._id && updatingViews.type === 'viewsEnabled' ? (
+                              {updatingViews?.id === item._id && updatingViews.type === 'viewsVisible' ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : item.viewsEnabled !== false ? (
+                              ) : item.viewsVisible ? (
                                 <Eye className="h-4 w-4" />
                               ) : (
                                 <EyeOff className="h-4 w-4" />
                               )}
                             </button>
-                            <button
-                              onClick={() => handleToggleViewsSetting(item._id, 'viewsVisible', item.viewsVisible ?? true)}
-                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsVisible'}
-                              className={`border p-1 disabled:opacity-50 ${
-                                item.viewsVisible !== false
-                                  ? 'text-purple-600 hover:text-purple-800 border-purple-600 hover:border-purple-800'
-                                  : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
-                              }`}
-                              title={`Views Visible: ${item.viewsVisible !== false ? 'ON' : 'OFF'}`}
-                            >
-                              {updatingViews?.id === item._id && updatingViews.type === 'viewsVisible' ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleToggleViewsSetting(item._id, 'viewsCountVisible', item.viewsCountVisible ?? true)}
-                              disabled={updatingViews?.id === item._id && updatingViews.type === 'viewsCountVisible'}
-                              className={`border p-1 disabled:opacity-50 ${
-                                item.viewsCountVisible !== false
-                                  ? 'text-orange-600 hover:text-orange-800 border-orange-600 hover:border-orange-800'
-                                  : 'text-gray-400 hover:text-gray-600 border-gray-400 hover:border-gray-600'
-                              }`}
-                              title={`Views Count Visible: ${item.viewsCountVisible !== false ? 'ON' : 'OFF'}`}
-                            >
-                              {updatingViews?.id === item._id && updatingViews.type === 'viewsCountVisible' ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
+                            {editingViewsCount?.id === item._id ? (
+                              <div className="flex items-center space-x-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingViewsCount.value}
+                                  onChange={(e) => setEditingViewsCount({ id: item._id, value: parseInt(e.target.value) || 0 })}
+                                  className="w-16 border border-black px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => handleUpdateViewsCount(item._id, editingViewsCount.value)}
+                                  disabled={updatingViews?.id === item._id && updatingViews.type === 'viwsCountToVisible'}
+                                  className="text-green-600 hover:text-green-800 border border-green-600 hover:border-green-800 p-1 disabled:opacity-50"
+                                  title="Save"
+                                >
+                                  {updatingViews?.id === item._id && updatingViews.type === 'viwsCountToVisible' ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <BarChart3 className="h-4 w-4" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => setEditingViewsCount(null)}
+                                  className="text-red-600 hover:text-red-800 border border-red-600 hover:border-red-800 p-1"
+                                  title="Cancel"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setEditingViewsCount({ id: item._id, value: item.viwsCountToVisible || 0 })}
+                                className="text-orange-600 hover:text-orange-800 border border-orange-600 hover:border-orange-800 p-1"
+                                title={`Views Count To Visible: ${item.viwsCountToVisible || 0}`}
+                              >
                                 <BarChart3 className="h-4 w-4" />
-                              )}
-                            </button>
+                              </button>
+                            )}
                           </>
                         )}
                         <button
