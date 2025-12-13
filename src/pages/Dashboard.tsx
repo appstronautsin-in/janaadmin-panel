@@ -498,7 +498,6 @@ const Dashboard = () => {
       case 'manageSubmittedEvents':
         return (
           <ManageSubmittedEvents
-            onClose={() => handleShowView('dashboard')}
             showAlert={showAlertMessage}
           />
         );

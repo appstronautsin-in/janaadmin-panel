@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, RefreshCw, Eye, Check, XCircle, Calendar, MapPin, DollarSign, Clock, ExternalLink } from 'lucide-react';
+import { RefreshCw, Eye, Check, XCircle, Calendar, MapPin, DollarSign, ExternalLink, Loader2, Filter, X } from 'lucide-react';
 import axios from '../config/axios';
 import { usePermissions } from '../middleware/PermissionsMiddleware';
-import { API_BASE_URL } from '../config/constants';
 
 interface Customer {
   _id: string;
@@ -41,26 +40,20 @@ interface SubmittedEvent {
 }
 
 interface ManageSubmittedEventsProps {
-  onClose: () => void;
   showAlert: (message: string, type: 'success' | 'error') => void;
 }
 
-const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, showAlert }) => {
+const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ showAlert }) => {
   const { checkPermission } = usePermissions();
   const [events, setEvents] = useState<SubmittedEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<SubmittedEvent | null>(null);
   const [viewMode, setViewMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('all');
 
   useEffect(() => {
-    const hasEventPermission = checkPermission('createEvent') || checkPermission('editEvent') || checkPermission('deleteEvent');
-    if (!hasEventPermission) {
-      showAlert('You do not have permission to view submitted events', 'error');
-      onClose();
-      return;
-    }
     fetchEvents();
   }, []);
 
@@ -75,6 +68,20 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
       showAlert(error.response?.data?.message || 'Failed to fetch submitted events', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const response = await axios.get('/v1/submit-event/submitted');
+      if (response.data.success) {
+        setEvents(response.data.events);
+      }
+    } catch (error: any) {
+      showAlert(error.response?.data?.message || 'Failed to refresh submitted events', 'error');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -136,10 +143,18 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
     return statusStyles[status as keyof typeof statusStyles] || 'bg-gray-100 text-gray-800';
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
+      </div>
+    );
+  }
+
   if (viewMode && selectedEvent) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white border border-black shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="p-6">
+        <div className="bg-white border border-black shadow-lg max-w-4xl mx-auto">
           <div className="sticky top-0 bg-white border-b border-black p-6 flex justify-between items-center z-10">
             <h2 className="text-2xl font-bold text-gray-900">View Submitted Event</h2>
             <button
@@ -215,7 +230,7 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
                   {selectedEvent.image.map((img, index) => (
                     <div key={index} className="border border-gray-300 rounded overflow-hidden">
                       <img
-                        src={`${API_BASE_URL}/${img}`}
+                        src={`https://laqsya.com/${img}`}
                         alt={`Event ${index + 1}`}
                         className="w-full h-48 object-cover"
                         onError={(e) => {
@@ -299,60 +314,54 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-black shadow-lg max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-white border-b border-black p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Manage Submitted Events</h2>
-              <div className="mt-2 flex gap-4 text-sm">
-                <span className="text-gray-600">
-                  Total: <span className="font-semibold text-gray-900">{events.length}</span>
-                </span>
-                <span className="text-gray-600">
-                  Submitted: <span className="font-semibold text-blue-700">{events.filter(e => e.status === 'submitted').length}</span>
-                </span>
-                <span className="text-gray-600">
-                  Approved: <span className="font-semibold text-green-700">{events.filter(e => e.status === 'approved').length}</span>
-                </span>
-                <span className="text-gray-600">
-                  Rejected: <span className="font-semibold text-red-700">{events.filter(e => e.status === 'rejected').length}</span>
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={fetchEvents}
-                disabled={loading}
-                className="p-2 border border-black hover:bg-gray-100 disabled:opacity-50"
-                title="Refresh"
-              >
-                <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 border border-black hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Manage Submitted Events</h1>
+          <div className="mt-2 flex gap-4 text-sm">
+            <span className="text-gray-600">
+              Total: <span className="font-semibold text-gray-900">{events.length}</span>
+            </span>
+            <span className="text-gray-600">
+              Submitted: <span className="font-semibold text-blue-700">{events.filter(e => e.status === 'submitted').length}</span>
+            </span>
+            <span className="text-gray-600">
+              Approved: <span className="font-semibold text-green-700">{events.filter(e => e.status === 'approved').length}</span>
+            </span>
+            <span className="text-gray-600">
+              Rejected: <span className="font-semibold text-red-700">{events.filter(e => e.status === 'rejected').length}</span>
+            </span>
           </div>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <RefreshCw className={`w-5 h-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
 
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[250px]">
-              <input
-                type="text"
-                placeholder="Search by title, customer name, email, or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-black"
-              />
-            </div>
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Search:</label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by title, customer name, email, or phone..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
 
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Filter by Status:</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="border border-black rounded px-4 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-800"
             >
               <option value="all">All Status</option>
               <option value="submitted">Submitted</option>
@@ -361,110 +370,122 @@ const ManageSubmittedEvents: React.FC<ManageSubmittedEventsProps> = ({ onClose, 
             </select>
           </div>
         </div>
-
-        <div className="flex-1 overflow-auto p-6">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <RefreshCw size={32} className="animate-spin text-gray-400" />
-            </div>
-          ) : filteredEvents.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 text-lg">No submitted events found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-100 border-b-2 border-black">
-                    <th className="text-left p-3 font-bold">Title</th>
-                    <th className="text-left p-3 font-bold">Submitted By</th>
-                    <th className="text-left p-3 font-bold">Date & Time</th>
-                    <th className="text-left p-3 font-bold">Status</th>
-                    <th className="text-left p-3 font-bold">Paid</th>
-                    <th className="text-left p-3 font-bold">Views</th>
-                    <th className="text-left p-3 font-bold">Created</th>
-                    <th className="text-left p-3 font-bold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEvents.map((event) => (
-                    <tr key={event._id} className="border-b border-gray-300 hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="font-medium text-gray-900">{event.title}</div>
-                        {event.image.length > 0 && (
-                          <span className="text-xs text-gray-500">{event.image.length} images</span>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <div className="text-sm">
-                          <div className="font-medium">{event.customer.fullname || 'N/A'}</div>
-                          <div className="text-gray-500 text-xs">{event.customer.email || event.customer.phoneNumber}</div>
-                        </div>
-                      </td>
-                      <td className="p-3 text-sm">
-                        {event.eventDateAndTime ? (
-                          <div className="flex items-center gap-1">
-                            <Calendar size={14} />
-                            {new Date(event.eventDateAndTime).toLocaleDateString()}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">Not set</span>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(event.status)}`}>
-                          {event.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-sm">
-                        {event.paid ? (
-                          <span className="text-green-600 font-medium">${event.price}</span>
-                        ) : (
-                          <span className="text-gray-400">Free</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-sm">{event.views}</td>
-                      <td className="p-3 text-sm text-gray-600">
-                        {new Date(event.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleView(event)}
-                            className="p-2 border border-black hover:bg-gray-100"
-                            title="View Details"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          {event.status === 'submitted' && (
-                            <>
-                              <button
-                                onClick={() => handleApprove(event._id)}
-                                className="p-2 border border-green-600 text-green-600 hover:bg-green-50"
-                                title="Approve"
-                              >
-                                <Check size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleReject(event._id)}
-                                className="p-2 border border-red-600 text-red-600 hover:bg-red-50"
-                                title="Reject"
-                              >
-                                <XCircle size={16} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
+
+      {filteredEvents.length === 0 ? (
+        <div className="text-center py-12 bg-white border border-black">
+          <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-500 text-lg">No submitted events found</p>
+        </div>
+      ) : (
+        <div className="bg-white border border-black shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-black">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Submitted By
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Date & Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Paid
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Views
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-black">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredEvents.map((event) => (
+                  <tr key={event._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 border-r border-gray-200">
+                      <div className="font-medium text-gray-900">{event.title}</div>
+                      {event.image.length > 0 && (
+                        <span className="text-xs text-gray-500">{event.image.length} images</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200">
+                      <div className="text-sm">
+                        <div className="font-medium">{event.customer.fullname || 'N/A'}</div>
+                        <div className="text-gray-500 text-xs">{event.customer.email || event.customer.phoneNumber}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200 text-sm">
+                      {event.eventDateAndTime ? (
+                        <div className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          {new Date(event.eventDateAndTime).toLocaleDateString()}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">Not set</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold ${getStatusBadge(event.status)}`}>
+                        {event.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200 text-sm">
+                      {event.paid ? (
+                        <span className="text-green-600 font-medium">${event.price}</span>
+                      ) : (
+                        <span className="text-gray-400">Free</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200 text-sm">{event.views}</td>
+                    <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-600">
+                      {new Date(event.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleView(event)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="View"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                        {event.status === 'submitted' && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(event._id)}
+                              className="text-green-600 hover:text-green-900"
+                              title="Approve"
+                            >
+                              <Check className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleReject(event._id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Reject"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
