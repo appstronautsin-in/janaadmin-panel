@@ -230,7 +230,7 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     setUpdatingViews({ id, type: 'viewsVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { viewsVisible: !currentValue });
+      await api.patch(`/v1/news/${id}/views-visible`, { viewsVisible: !currentValue });
 
       await logActivity(
         ActivityActions.UPDATE,
@@ -258,7 +258,7 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     setUpdatingViews({ id, type: 'viwsCountToVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { viwsCountToVisible: value });
+      await api.patch(`/v1/news/${id}/views-count-visible`, { viwsCountToVisible: value });
 
       await logActivity(
         ActivityActions.UPDATE,
@@ -287,13 +287,13 @@ const ManageNews: React.FC<ManageNewsProps> = ({ onClose, showAlert }) => {
     setUpdatingViews({ id, type: 'commentsVisible' });
     try {
       const newsItem = news.find(n => n._id === id);
-      await api.put(`/v1/news/${id}`, { commentsVisible: !currentValue });
+      await api.patch(`/v1/news/${id}/comments-visible`, { visibleComment: !currentValue });
 
       await logActivity(
         ActivityActions.UPDATE,
         ActivitySections.NEWS,
         `Updated Comments Visible for news: ${newsItem?.title || 'Unknown'}`,
-        { newsId: id, setting: 'commentsVisible', value: !currentValue }
+        { newsId: id, setting: 'visibleComment', value: !currentValue }
       );
 
       await fetchNews();
