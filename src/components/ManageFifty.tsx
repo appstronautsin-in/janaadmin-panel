@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Trash2, Loader2, X, Eye, FileText, ToggleLeft, ToggleRight, CheckCircle, XCircle } from 'lucide-react';
+import { Pencil, Trash2, Loader2, X, Eye, FileText, ToggleLeft, ToggleRight, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import api from '../config/axios';
 import { IMAGE_BASE_URL } from '../config/constants';
 import ViewFifty from './ViewFifty';
 import EditFifty from './EditFifty';
+import ViewFiftyComments from './ViewFiftyComments';
 import { usePermissions } from '../middleware/PermissionsMiddleware';
 
 interface FiftyYear {
@@ -31,11 +32,13 @@ const ManageFifty: React.FC<ManageFiftyProps> = ({ onClose, showAlert }) => {
   const [toggleLoading, setToggleLoading] = useState<string | null>(null);
   const [viewingFifty, setViewingFifty] = useState<FiftyYear | null>(null);
   const [editingFiftyId, setEditingFiftyId] = useState<string | null>(null);
+  const [viewingComments, setViewingComments] = useState<{ id: string; title: string } | null>(null);
 
   // Get permissions
   const { checkPermission } = usePermissions();
   const canEdit = checkPermission('editFifty');
   const canDelete = checkPermission('deleteFifty');
+  const canCreate = checkPermission('createFifty');
 
   useEffect(() => {
     fetchFiftyYears();
@@ -119,6 +122,10 @@ const ManageFifty: React.FC<ManageFiftyProps> = ({ onClose, showAlert }) => {
 
   const handleView = (fiftyYear: FiftyYear) => {
     setViewingFifty(fiftyYear);
+  };
+
+  const handleViewComments = (id: string, title: string) => {
+    setViewingComments({ id, title });
   };
 
   const formatDate = (dateString: string) => {
@@ -229,6 +236,14 @@ const ManageFifty: React.FC<ManageFiftyProps> = ({ onClose, showAlert }) => {
                     <Eye className="h-4 w-4" />
                   </button>
 
+                  <button
+                    onClick={() => handleViewComments(item._id, item.title)}
+                    className="text-blue-600 hover:text-blue-800 border border-blue-600 hover:border-blue-800 p-1.5 rounded transition-colors"
+                    title="View Comments"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </button>
+
                   {canEdit && (
                     <button
                       onClick={() => handleToggleActive(item._id, item.isActive)}
@@ -293,6 +308,15 @@ const ManageFifty: React.FC<ManageFiftyProps> = ({ onClose, showAlert }) => {
           fiftyYearId={editingFiftyId}
           onClose={() => setEditingFiftyId(null)}
           onSuccess={fetchFiftyYears}
+          showAlert={showAlert}
+        />
+      )}
+
+      {viewingComments && (
+        <ViewFiftyComments
+          fiftyYearId={viewingComments.id}
+          fiftyYearTitle={viewingComments.title}
+          onClose={() => setViewingComments(null)}
           showAlert={showAlert}
         />
       )}
