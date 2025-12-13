@@ -253,7 +253,7 @@ const ViewSubscriptions: React.FC<ViewSubscriptionsProps> = ({ customerId, custo
   if (showAssignForm) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white border border-black shadow-lg w-full max-w-2xl">
+        <div className="bg-white border border-black shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
           <div className="flex justify-between items-center p-6 border-b border-black">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Assign Subscription</h2>
@@ -275,7 +275,8 @@ const ViewSubscriptions: React.FC<ViewSubscriptionsProps> = ({ customerId, custo
               <p className="mt-2 text-gray-600">Loading packages...</p>
             </div>
           ) : (
-            <form onSubmit={handleAssignSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleAssignSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="overflow-y-auto p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Package
@@ -379,8 +380,9 @@ const ViewSubscriptions: React.FC<ViewSubscriptionsProps> = ({ customerId, custo
                   className="mt-1 block w-full border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
                 />
               </div>
+              </div>
 
-              <div className="flex justify-end space-x-3 pt-6 border-t border-black">
+              <div className="flex justify-end space-x-3 p-6 border-t border-black">
                 <button
                   type="button"
                   onClick={() => setShowAssignForm(false)}
