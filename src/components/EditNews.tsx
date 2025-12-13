@@ -57,6 +57,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>('16:9');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [imageScale, setImageScale] = useState<number>(1);
   const [imagePosition, setImagePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -323,25 +324,46 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
     canvas.width = dimensions.width;
     canvas.height = dimensions.height;
 
-    // Draw background with optional blur and selected color
-    if (canvasBlur > 0) {
-      ctx.filter = `blur(${canvasBlur}px)`;
-    }
+    // Fill canvas with selected background color
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Reset filter before drawing image
-    ctx.filter = 'none';
-
-    // Draw image at original size with position (no blur, no scaling)
     const img = imageRef.current;
+    const scaledWidth = img.width * imageScale;
+    const scaledHeight = img.height * imageScale;
 
+    // If blur is enabled, draw blurred background first
+    if (canvasBlur > 0) {
+      ctx.filter = `blur(${canvasBlur}px)`;
+
+      // Draw the image scaled to fill the entire canvas as background
+      const canvasAspect = canvas.width / canvas.height;
+      const imgAspect = img.width / img.height;
+
+      let bgWidth, bgHeight, bgX, bgY;
+      if (canvasAspect > imgAspect) {
+        bgWidth = canvas.width;
+        bgHeight = canvas.width / imgAspect;
+        bgX = 0;
+        bgY = (canvas.height - bgHeight) / 2;
+      } else {
+        bgHeight = canvas.height;
+        bgWidth = canvas.height * imgAspect;
+        bgX = (canvas.width - bgWidth) / 2;
+        bgY = 0;
+      }
+
+      ctx.drawImage(img, bgX, bgY, bgWidth, bgHeight);
+      ctx.filter = 'none';
+    }
+
+    // Draw main image with scale and position (without blur)
     ctx.drawImage(
       img,
       imagePosition.x,
       imagePosition.y,
-      img.width,
-      img.height
+      scaledWidth,
+      scaledHeight
     );
   };
 
@@ -361,15 +383,25 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
     setIsDragging(false);
   };
 
+  const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageScale(parseFloat(e.target.value));
+  };
+
   useEffect(() => {
     if (cropMode && imageRef.current) {
       drawCanvas();
     }
-  }, [imagePosition, aspectRatio, cropMode, canvasBlur, canvasColor]);
+  }, [imageScale, imagePosition, aspectRatio, cropMode, canvasBlur, canvasColor]);
 
   useEffect(() => {
     if (cropMode && imageRef.current) {
-      // Reset position when aspect ratio changes
+      // Reset position and scale when aspect ratio changes
+      const dimensions = getCanvasDimensions();
+      const img = imageRef.current;
+      const scaleX = dimensions.width / img.width;
+      const scaleY = dimensions.height / img.height;
+      const initialScale = Math.max(scaleX, scaleY);
+      setImageScale(initialScale);
       setImagePosition({ x: 0, y: 0 });
     }
   }, [aspectRatio, cropMode]);
@@ -381,6 +413,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
     setIsExistingImage(false);
     setImageScale(1);
     setImagePosition({ x: 0, y: 0 });
+    setCanvasBlur(0);
   };
 
   const applyCrop = async () => {
@@ -413,22 +446,44 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
     outputCanvas.width = finalDimensions.width;
     outputCanvas.height = finalDimensions.height;
 
-    // Draw background with optional blur and selected color
-    if (canvasBlur > 0) {
-      ctx.filter = `blur(${canvasBlur}px)`;
-    }
+    // Fill canvas with selected background color
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-
-    // Reset filter before drawing image
-    ctx.filter = 'none';
 
     // Calculate scale ratio from preview canvas to final canvas
     const canvasDimensions = getCanvasDimensions();
     const scaleRatio = finalDimensions.width / canvasDimensions.width;
 
-    // Draw the image with the same relative position (no scaling)
     const img = imageRef.current;
+
+    // If blur is enabled, draw blurred background first
+    if (canvasBlur > 0) {
+      ctx.filter = `blur(${canvasBlur}px)`;
+
+      // Draw the image scaled to fill the entire canvas as background
+      const canvasAspect = outputCanvas.width / outputCanvas.height;
+      const imgAspect = img.width / img.height;
+
+      let bgWidth, bgHeight, bgX, bgY;
+      if (canvasAspect > imgAspect) {
+        bgWidth = outputCanvas.width;
+        bgHeight = outputCanvas.width / imgAspect;
+        bgX = 0;
+        bgY = (outputCanvas.height - bgHeight) / 2;
+      } else {
+        bgHeight = outputCanvas.height;
+        bgWidth = outputCanvas.height * imgAspect;
+        bgX = (outputCanvas.width - bgWidth) / 2;
+        bgY = 0;
+      }
+
+      ctx.drawImage(img, bgX, bgY, bgWidth, bgHeight);
+      ctx.filter = 'none';
+    }
+
+    // Draw the main image with the same relative position and scale
+    const scaledWidth = img.width * imageScale * scaleRatio;
+    const scaledHeight = img.height * imageScale * scaleRatio;
     const scaledX = imagePosition.x * scaleRatio;
     const scaledY = imagePosition.y * scaleRatio;
 
@@ -436,8 +491,8 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
       img,
       scaledX,
       scaledY,
-      img.width,
-      img.height
+      scaledWidth,
+      scaledHeight
     );
 
     // Convert canvas to blob
@@ -475,6 +530,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
       setIsExistingImage(false);
       setImageScale(1);
       setImagePosition({ x: 0, y: 0 });
+      setCanvasBlur(0);
 
       showAlert('Image fitted to canvas successfully', 'success');
     }, 'image/jpeg', 0.92);
@@ -584,6 +640,20 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
                   <option value="9:16">Story (9:16)</option>
                 </select>
               </div>
+            </div>
+
+            <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
+              <label className="text-sm font-medium text-gray-700">Scale:</label>
+              <input
+                type="range"
+                min="0.1"
+                max="3"
+                step="0.01"
+                value={imageScale}
+                onChange={handleScaleChange}
+                className="w-48"
+              />
+              <span className="text-sm text-gray-600 w-12">{(imageScale * 100).toFixed(0)}%</span>
             </div>
 
             <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
