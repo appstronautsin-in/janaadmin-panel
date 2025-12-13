@@ -120,6 +120,7 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
     try {
       const response = await api.get('/v1/customer/auth/all-customers');
       setCustomers(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error('Error fetching customers:', error);
       showAlert('Failed to fetch customers', 'error');
