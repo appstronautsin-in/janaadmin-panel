@@ -78,6 +78,7 @@ interface SidebarProps {
   onShowManageDoYouKnow: () => void;
   onShowCreateEvent: () => void;
   onShowManageEvents: () => void;
+  onShowManageSubmittedEvents: () => void;
   onShowViewsAnalytics: () => void;
   onShowManageSubmittedNews: () => void;
   onShowGenerateClassified: () => void;
@@ -163,6 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onShowManageDoYouKnow,
   onShowCreateEvent,
   onShowManageEvents,
+  onShowManageSubmittedEvents,
   onShowViewsAnalytics,
   onShowManageSubmittedNews,
   onShowGenerateClassified,
@@ -679,6 +681,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                     className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:bg-gray-50 border border-transparent hover:border-black transition-colors duration-200"
                   >
                     Manage Events
+                  </button>
+                  <button
+                    onClick={() => handleNavigation(onShowManageSubmittedEvents, ActivitySections.EVENTS, 'Navigated to Manage Submitted Events')}
+                    className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:bg-gray-50 border border-transparent hover:border-black transition-colors duration-200"
+                  >
+                    Manage Submitted Events
                   </button>
                 </div>
               )}

@@ -52,6 +52,7 @@ import ManageEvents from '../components/ManageEvents';
 import EditEvent from '../components/EditEvent';
 import ViewEvent from '../components/ViewEvent';
 import ManageSubmittedNews from '../components/ManageSubmittedNews';
+import ManageSubmittedEvents from '../components/ManageSubmittedEvents';
 import GenerateClassified from '../components/GenerateClassified';
 import ManageSessionLogs from '../components/ManageSessionLogs';
 import SystemSettings from '../components/SystemSettings';
@@ -494,6 +495,14 @@ const Dashboard = () => {
           />
         ) : null;
 
+      case 'manageSubmittedEvents':
+        return (
+          <ManageSubmittedEvents
+            onClose={() => handleShowView('dashboard')}
+            showAlert={showAlertMessage}
+          />
+        );
+
       case 'alignNews':
         return <AlignNews />;
 
@@ -638,6 +647,7 @@ const Dashboard = () => {
           onShowManageDoYouKnow={() => handleShowView('manageDoYouKnow')}
           onShowCreateEvent={() => handleShowView('createEvent')}
           onShowManageEvents={() => handleShowView('manageEvents')}
+          onShowManageSubmittedEvents={() => handleShowView('manageSubmittedEvents')}
           onShowManageSubmittedNews={() => handleShowView('manageSubmittedNews')}
           onShowGenerateClassified={() => handleShowView('generateClassified')}
           onShowManageSessionLogs={() => handleShowView('manageSessionLogs')}
