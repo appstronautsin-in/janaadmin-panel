@@ -17,7 +17,7 @@ interface Customer {
   isAppleLogin: boolean;
   isSubcribed: boolean;
   spam?: boolean;
-  attachedTrail?: boolean;
+  hasSeenTrialPopup?: boolean;
   lastlogin: string;
   createdAt: string;
   updatedAt: string;
@@ -76,7 +76,7 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
     // Apply trail filter
     if (trailFilter !== 'all') {
       filtered = filtered.filter(customer =>
-        trailFilter === 'with_trail' ? customer.attachedTrail : !customer.attachedTrail
+        trailFilter === 'with_trail' ? customer.hasSeenTrialPopup : !customer.hasSeenTrialPopup
       );
     }
 
@@ -287,7 +287,7 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
                 Subscribed: <span className="font-semibold text-green-700">{customers.filter(c => c.isSubcribed).length}</span>
               </span>
               <span className="text-gray-600">
-                With Trail: <span className="font-semibold text-blue-700">{customers.filter(c => c.attachedTrail).length}</span>
+                Seen Trial Popup: <span className="font-semibold text-blue-700">{customers.filter(c => c.hasSeenTrialPopup).length}</span>
               </span>
             </div>
           </div>
@@ -358,9 +358,9 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
               onChange={(e) => setTrailFilter(e.target.value as 'all' | 'with_trail' | 'without_trail')}
               className="flex-1 border border-black rounded px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
             >
-              <option value="all">All Trail Status</option>
-              <option value="with_trail">With Trail</option>
-              <option value="without_trail">Without Trail</option>
+              <option value="all">All Trial Status</option>
+              <option value="with_trail">Seen Trial Popup</option>
+              <option value="without_trail">Not Seen Trial Popup</option>
             </select>
           </div>
 
