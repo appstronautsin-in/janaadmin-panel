@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Trash2, Loader2, X, Mail, Phone, Facebook, Chrome, CreditCard, Search, Filter, RefreshCw } from 'lucide-react';
+import { Eye, Trash2, Loader2, X, Mail, Phone, Facebook, Chrome, CreditCard, Search, Filter, RefreshCw, Ban, CheckCircle } from 'lucide-react';
 import api from '../config/axios';
 import ViewCustomer from './ViewCustomer';
 import ViewSubscriptions from './ViewSubscriptions';
@@ -16,6 +16,7 @@ interface Customer {
   isFacebookLogin: boolean;
   isAppleLogin: boolean;
   isSubcribed: boolean;
+  spam?: boolean;
   lastlogin: string;
   createdAt: string;
   updatedAt: string;
@@ -38,6 +39,7 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [spamLoading, setSpamLoading] = useState<string | null>(null);
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
   const [viewingSubscriptions, setViewingSubscriptions] = useState<{id: string; name?: string} | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -168,6 +170,43 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
       id: customer._id,
       name: customer.fullname
     });
+  };
+
+  const handleToggleSpam = async (customer: Customer) => {
+    if (!canEdit) {
+      showAlert('You do not have permission to mark customers as spam', 'error');
+      return;
+    }
+
+    const newSpamStatus = !customer.spam;
+    const confirmMessage = newSpamStatus
+      ? 'Are you sure you want to mark this customer as spam?'
+      : 'Are you sure you want to remove spam status from this customer?';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setSpamLoading(customer._id);
+    try {
+      await api.put(`/v1/customer/auth/update-spam/${customer._id}`, {
+        spam: newSpamStatus
+      });
+
+      setCustomers(customers.map(c =>
+        c._id === customer._id ? { ...c, spam: newSpamStatus } : c
+      ));
+
+      showAlert(
+        newSpamStatus ? 'Customer marked as spam' : 'Spam status removed',
+        'success'
+      );
+    } catch (error) {
+      console.error('Error updating spam status:', error);
+      showAlert('Failed to update spam status', 'error');
+    } finally {
+      setSpamLoading(null);
+    }
   };
 
   const handleGoToPage = (e: React.FormEvent) => {
@@ -351,13 +390,20 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
                     {getLoginMethodIcons(customer)}
                   </td>
                   <td className="px-6 py-4 border-r border-black">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-medium border ${
-                      customer.isSubcribed
-                        ? 'bg-green-100 text-green-800 border-green-800'
-                        : 'bg-gray-100 text-gray-800 border-gray-800'
-                    }`}>
-                      {customer.isSubcribed ? 'Subscribed' : 'Not Subscribed'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-medium border ${
+                        customer.isSubcribed
+                          ? 'bg-green-100 text-green-800 border-green-800'
+                          : 'bg-gray-100 text-gray-800 border-gray-800'
+                      }`}>
+                        {customer.isSubcribed ? 'Subscribed' : 'Not Subscribed'}
+                      </span>
+                      {customer.spam && (
+                        <span className="px-2 inline-flex text-xs leading-5 font-medium border bg-red-100 text-red-800 border-red-800">
+                          SPAM
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 border-r border-black">
                     <div className="text-sm">
@@ -399,6 +445,27 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
                           title="View Subscriptions"
                         >
                           <CreditCard className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {canEdit && (
+                        <button
+                          onClick={() => handleToggleSpam(customer)}
+                          disabled={spamLoading === customer._id}
+                          className={`border p-1 disabled:opacity-50 ${
+                            customer.spam
+                              ? 'text-green-600 hover:text-green-800 border-green-600 hover:border-green-800'
+                              : 'text-orange-600 hover:text-orange-800 border-orange-600 hover:border-orange-800'
+                          }`}
+                          title={customer.spam ? 'Remove Spam Status' : 'Mark as Spam'}
+                        >
+                          {spamLoading === customer._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : customer.spam ? (
+                            <CheckCircle className="h-4 w-4" />
+                          ) : (
+                            <Ban className="h-4 w-4" />
+                          )}
                         </button>
                       )}
 
