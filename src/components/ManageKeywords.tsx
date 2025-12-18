@@ -3,6 +3,7 @@ import { Plus, Search, Edit2, Trash2, X, RefreshCw } from 'lucide-react';
 import api from '../config/axios';
 import { logActivity } from '../utils/activityLogger';
 import { useTimeFormat } from '../contexts/TimeFormatContext';
+import { formatDisplayDateTime } from '../utils/dateTimeFormat';
 
 interface Keyword {
   _id: string;
@@ -38,7 +39,7 @@ const ManageKeywords: React.FC<ManageKeywordsProps> = ({ showAlert }) => {
   ]);
   const [editType, setEditType] = useState<'web' | 'youtube' | 'both'>('web');
   const [editFrequency, setEditFrequency] = useState(30);
-  const { formatDateTime } = useTimeFormat();
+  const { timeFormat } = useTimeFormat();
 
   useEffect(() => {
     fetchKeywords();
@@ -236,7 +237,7 @@ const ManageKeywords: React.FC<ManageKeywordsProps> = ({ showAlert }) => {
                       </td>
                       <td className="px-4 py-3 text-center text-sm text-gray-900">{keyword.frequencyMinutes}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {formatDateTime(keyword.lastCheckedAt)}
+                        {formatDisplayDateTime(keyword.lastCheckedAt, timeFormat)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium border ${
