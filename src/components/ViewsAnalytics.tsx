@@ -277,7 +277,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     fiveDaysAgo.setDate(today.getDate() - 5);
 
     const filteredData = epaperData.filter(item => {
-      const itemDate = new Date(item.viewedAt);
+      const itemDate = new Date(item.createdAt);
       return itemDate >= fiveDaysAgo;
     });
 
