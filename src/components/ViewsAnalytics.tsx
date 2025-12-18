@@ -550,6 +550,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Title</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Category</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Views</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Shared</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Created</th>
                       </tr>
                     </thead>
@@ -568,6 +569,9 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                                 {item.views.toLocaleString()}
                               </span>
                             </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 font-semibold">
+                            {item.sharedCount || 0}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {formatDate(item.createdAt)}
