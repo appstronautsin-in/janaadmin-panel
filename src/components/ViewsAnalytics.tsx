@@ -234,6 +234,17 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     });
   };
 
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
   const getTotalViews = () => {
     if (activeTab === 'news') {
       return newsData.reduce((sum, item) => sum + item.views, 0);
@@ -664,26 +675,32 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                     </div>
 
                     <div className="border border-black bg-white p-4">
-                      <h3 className="text-lg font-semibold mb-4 text-center">Views by E-Paper Title</h3>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                          <Pie
-                            data={getEpaperTitles()}
-                            dataKey="views"
-                            nameKey="title"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={100}
-                            label={(entry) => `${entry.title}: ${entry.views}`}
-                          >
-                            {getEpaperTitles().map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      <h3 className="text-lg font-semibold mb-4 text-center">Views by E-Paper Title (Last 5 Days)</h3>
+                      {getEpaperTitles().length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={getEpaperTitles()}
+                              dataKey="views"
+                              nameKey="title"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={100}
+                              label={(entry) => `${entry.title}: ${entry.views}`}
+                            >
+                              {getEpaperTitles().map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-[300px] text-gray-500">
+                          <p>No e-paper views in the last 5 days</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -714,7 +731,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                               {item.sessionTime}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
-                              {formatDate(item.createdAt)}
+                              {formatDateTime(item.viewedAt)}
                             </td>
                           </tr>
                         ))}
