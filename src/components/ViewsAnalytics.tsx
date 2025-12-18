@@ -65,7 +65,10 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   const [categoryLoading, setCategoryLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<string>('today');
-  const [epaperDateFilter, setEpaperDateFilter] = useState<string>('');
+  const [epaperDateFilter, setEpaperDateFilter] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [classifiedCategories] = useState<string[]>([
     'Wanted',
     'Real Estate',
@@ -350,7 +353,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setPhoneSearch('');
             setCustomerSearch('');
             setDateFilter('today');
-            setEpaperDateFilter('');
+            const today = new Date();
+            setEpaperDateFilter(today.toISOString().split('T')[0]);
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
             activeTab === 'epaper'
@@ -459,21 +463,13 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             </div>
             <div className="flex items-center gap-4">
               <Filter className="h-5 w-5 text-gray-600" />
-              <label className="text-sm font-medium text-gray-700">Filter by Date:</label>
+              <label className="text-sm font-medium text-gray-700">Select Date:</label>
               <input
                 type="date"
                 value={epaperDateFilter}
                 onChange={(e) => setEpaperDateFilter(e.target.value)}
                 className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
               />
-              {epaperDateFilter && (
-                <button
-                  onClick={() => setEpaperDateFilter('')}
-                  className="px-3 py-2 text-sm border border-black text-gray-700 hover:bg-gray-50"
-                >
-                  Clear
-                </button>
-              )}
             </div>
           </>
         )}
