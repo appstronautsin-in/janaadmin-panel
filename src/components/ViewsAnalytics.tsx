@@ -41,6 +41,8 @@ interface EPaperViewItem {
   customerId: {
     _id: string;
     email: string;
+    phoneNumber?: string;
+    name?: string;
   } | string;
   sessionTime: number;
   pageNumber: number;
@@ -212,8 +214,16 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
 
       if (customerSearch.trim()) {
         data = data.filter((item: EPaperViewItem) => {
-          const email = typeof item.customerId === 'object' ? item.customerId.email : '';
-          return email.toLowerCase().includes(customerSearch.trim().toLowerCase());
+          if (typeof item.customerId === 'object') {
+            const email = item.customerId.email || '';
+            const phoneNumber = item.customerId.phoneNumber || '';
+            const name = item.customerId.name || '';
+            const searchTerm = customerSearch.trim().toLowerCase();
+            return email.toLowerCase().includes(searchTerm) ||
+                   phoneNumber.includes(customerSearch.trim()) ||
+                   name.toLowerCase().includes(searchTerm);
+          }
+          return false;
         });
       }
 
@@ -469,7 +479,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                 type="text"
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}
-                placeholder="Enter customer email..."
+                placeholder="Enter name, email or phone number..."
                 className="flex-1 border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
               />
               {customerSearch && (
@@ -714,6 +724,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                         <tr>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">#</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Customer Email</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Phone Number</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">E-Paper Title</th>
                           <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Page Number</th>
                           <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Session Time (s)</th>
@@ -726,6 +737,9 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                             <td className="px-4 py-3 text-sm text-gray-900">#{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {typeof item.customerId === 'object' ? item.customerId.email : 'N/A'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {typeof item.customerId === 'object' ? (item.customerId.phoneNumber || '-') : '-'}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.ePaper.title}</td>
                             <td className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
