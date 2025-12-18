@@ -61,9 +61,10 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [phoneSearch, setPhoneSearch] = useState<string>('');
+  const [customerSearch, setCustomerSearch] = useState<string>('');
   const [categoryLoading, setCategoryLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('today');
   const [epaperDateFilter, setEpaperDateFilter] = useState<string>('');
   const [classifiedCategories] = useState<string[]>([
     'Wanted',
@@ -87,7 +88,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     } else if (activeTab === 'epaper') {
       fetchEpaperData();
     }
-  }, [activeTab, selectedCategory, phoneSearch, dateFilter, epaperDateFilter]);
+  }, [activeTab, selectedCategory, phoneSearch, customerSearch, dateFilter, epaperDateFilter]);
 
   const fetchNewsData = async () => {
     setLoading(true);
@@ -204,7 +205,15 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
       }
 
       const response = await api.get(url);
-      const data = epaperDateFilter ? response.data.data : response.data;
+      let data = epaperDateFilter ? response.data.data : response.data;
+
+      if (customerSearch.trim()) {
+        data = data.filter((item: EPaperViewItem) => {
+          const email = typeof item.customerId === 'object' ? item.customerId.email : '';
+          return email.toLowerCase().includes(customerSearch.trim().toLowerCase());
+        });
+      }
+
       setEpaperData(data || []);
     } catch (error) {
       console.error('Error fetching epaper data:', error);
@@ -307,7 +316,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setActiveTab('news');
             setSelectedCategory('all');
             setPhoneSearch('');
-            setDateFilter('all');
+            setCustomerSearch('');
+            setDateFilter('today');
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
             activeTab === 'news'
@@ -322,7 +332,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setActiveTab('classified');
             setSelectedCategory('all');
             setPhoneSearch('');
-            setDateFilter('all');
+            setCustomerSearch('');
+            setDateFilter('today');
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
             activeTab === 'classified'
@@ -337,7 +348,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setActiveTab('epaper');
             setSelectedCategory('all');
             setPhoneSearch('');
-            setDateFilter('all');
+            setCustomerSearch('');
+            setDateFilter('today');
             setEpaperDateFilter('');
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
@@ -425,24 +437,45 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
         )}
 
         {activeTab === 'epaper' && (
-          <div className="flex items-center gap-4">
-            <Filter className="h-5 w-5 text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">Filter by Date:</label>
-            <input
-              type="date"
-              value={epaperDateFilter}
-              onChange={(e) => setEpaperDateFilter(e.target.value)}
-              className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
-            />
-            {epaperDateFilter && (
-              <button
-                onClick={() => setEpaperDateFilter('')}
-                className="px-3 py-2 text-sm border border-black text-gray-700 hover:bg-gray-50"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+          <>
+            <div className="flex items-center gap-4">
+              <Search className="h-5 w-5 text-gray-600" />
+              <label className="text-sm font-medium text-gray-700">Search by Customer:</label>
+              <input
+                type="text"
+                value={customerSearch}
+                onChange={(e) => setCustomerSearch(e.target.value)}
+                placeholder="Enter customer email..."
+                className="flex-1 border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+              />
+              {customerSearch && (
+                <button
+                  onClick={() => setCustomerSearch('')}
+                  className="px-3 py-2 text-sm border border-black text-gray-700 hover:bg-gray-50"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              <Filter className="h-5 w-5 text-gray-600" />
+              <label className="text-sm font-medium text-gray-700">Filter by Date:</label>
+              <input
+                type="date"
+                value={epaperDateFilter}
+                onChange={(e) => setEpaperDateFilter(e.target.value)}
+                className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+              />
+              {epaperDateFilter && (
+                <button
+                  onClick={() => setEpaperDateFilter('')}
+                  className="px-3 py-2 text-sm border border-black text-gray-700 hover:bg-gray-50"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
 
