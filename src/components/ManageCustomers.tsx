@@ -279,17 +279,6 @@ const ManageCustomers: React.FC<ManageCustomersProps> = ({ onClose, showAlert })
         <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Manage Customers</h2>
-            <div className="mt-2 flex gap-4 text-sm">
-              <span className="text-gray-600">
-                Total Customers: <span className="font-semibold text-gray-900">{customers.length}</span>
-              </span>
-              <span className="text-gray-600">
-                Subscribed: <span className="font-semibold text-green-700">{customers.filter(c => c.isSubcribed).length}</span>
-              </span>
-              <span className="text-gray-600">
-                Seen Trial Popup: <span className="font-semibold text-blue-700">{customers.filter(c => c.hasSeenTrialPopup).length}</span>
-              </span>
-            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
