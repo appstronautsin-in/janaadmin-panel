@@ -261,8 +261,17 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   };
 
   const getEpaperTitles = () => {
+    const today = new Date();
+    const fiveDaysAgo = new Date(today);
+    fiveDaysAgo.setDate(today.getDate() - 5);
+
+    const filteredData = epaperData.filter(item => {
+      const itemDate = new Date(item.viewedAt);
+      return itemDate >= fiveDaysAgo;
+    });
+
     const titleViews: { [key: string]: number } = {};
-    epaperData.forEach(item => {
+    filteredData.forEach(item => {
       const title = item.ePaper.title;
       titleViews[title] = (titleViews[title] || 0) + 1;
     });
