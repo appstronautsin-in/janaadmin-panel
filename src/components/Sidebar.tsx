@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, Home, Newspaper, FolderTree, Users, CreditCard, ChevronDown, ChevronRight, FileText, UserCircle, ImagePlus, UserPlus, Activity, AlertTriangle, Database, BarChart3, Receipt, DollarSign, Lightbulb, FileBarChart, ArrowUpDown, Gift, HelpCircle, Eye, Calendar, Send, FileImage, Shield, Settings, MessageSquare, FolderOpen, Heart } from 'lucide-react';
+import { LogOut, Home, Newspaper, FolderTree, Users, CreditCard, ChevronDown, ChevronRight, FileText, UserCircle, ImagePlus, UserPlus, Activity, AlertTriangle, Database, BarChart3, Receipt, DollarSign, Lightbulb, FileBarChart, ArrowUpDown, Gift, HelpCircle, Eye, Calendar, Send, FileImage, Shield, Settings, MessageSquare, FolderOpen, Heart, Search } from 'lucide-react';
 import { usePermissions } from '../middleware/PermissionsMiddleware';
 import { logActivity, ActivityActions, ActivitySections } from '../utils/activityLogger';
 
@@ -87,6 +87,7 @@ interface SidebarProps {
   onShowManageComments: () => void;
   onShowManageAlbums: () => void;
   onShowManageSubmittedObituary: () => void;
+  onShowManageKeywords: () => void;
   onLogout: () => void;
 }
 
@@ -174,6 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onShowManageComments,
   onShowManageAlbums,
   onShowManageSubmittedObituary,
+  onShowManageKeywords,
   onLogout
 }) => {
   const { loading, checkPermission } = usePermissions();
@@ -706,6 +708,17 @@ const Sidebar: React.FC<SidebarProps> = ({
             <FileImage className="h-5 w-5 mr-3" />
             <span className="flex-1 text-left">Generate Classified</span>
           </button>
+
+          {/* Janathavani Crawler Keywords - Only for users with ALL permissions */}
+          {hasAllPermissions && (
+            <button
+              onClick={() => handleNavigation(onShowManageKeywords, ActivitySections.SETTINGS, 'Accessed Crawler Keywords')}
+              className="flex items-center w-full px-4 py-2 text-gray-600 hover:bg-gray-50 border border-transparent hover:border-black transition-colors duration-200"
+            >
+              <Search className="h-5 w-5 mr-3" />
+              <span className="flex-1 text-left">Janathavani Crawler</span>
+            </button>
+          )}
 
           {/* Ideega */}
           {hasJustInPermissions && (
