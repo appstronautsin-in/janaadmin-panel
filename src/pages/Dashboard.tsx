@@ -58,7 +58,6 @@ import GenerateClassified from '../components/GenerateClassified';
 import ManageSessionLogs from '../components/ManageSessionLogs';
 import SystemSettings from '../components/SystemSettings';
 import ManageAlbums from '../components/ManageAlbums';
-import ManageKeywords from '../components/ManageKeywords';
 import Footer from '../components/Footer';
 import { sessionManager } from '../utils/sessionManager';
 
@@ -537,13 +536,6 @@ const Dashboard = () => {
           />
         );
 
-      case 'manageKeywords':
-        return (
-          <ManageKeywords
-            showAlert={showAlertMessage}
-          />
-        );
-
       case 'manageAlbums':
         return (
           <ManageAlbums
@@ -670,7 +662,6 @@ const Dashboard = () => {
           onShowManageComments={() => handleShowView('manageComments')}
           onShowManageAlbums={() => handleShowView('manageAlbums')}
           onShowManageSubmittedObituary={() => handleShowView('manageSubmittedObituary')}
-          onShowManageKeywords={() => handleShowView('manageKeywords')}
           onShowDashboard={() => handleShowView('dashboard')}
           onLogout={handleLogout}
         />

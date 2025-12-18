@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Loader2, RefreshCw } from 'lucide-react';
+import { Save, Loader2, RefreshCw, Search } from 'lucide-react';
 import api from '../config/axios';
+import ManageKeywords from './ManageKeywords';
 
 interface Settings {
   _id: string;
@@ -29,6 +30,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCrawlerSettings, setShowCrawlerSettings] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -300,6 +302,27 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
           </button>
         </div>
       </form>
+
+      <div className="mt-8">
+        <button
+          onClick={() => setShowCrawlerSettings(!showCrawlerSettings)}
+          className="flex items-center justify-between w-full px-6 py-4 bg-white border border-black shadow-sm hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center">
+            <Search className="w-6 h-6 mr-3 text-black" />
+            <h2 className="text-xl font-bold text-gray-900">Janathavani Crawler</h2>
+          </div>
+          <span className="text-sm text-gray-600">
+            {showCrawlerSettings ? 'Hide' : 'Show'} Crawler Settings
+          </span>
+        </button>
+
+        {showCrawlerSettings && (
+          <div className="mt-4 bg-white border border-black shadow-sm p-6">
+            <ManageKeywords showAlert={showAlert} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
