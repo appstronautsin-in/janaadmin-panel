@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
       <div className="px-6 py-4">
         <div className="text-center space-y-2">
           <p className="text-sm text-gray-600">
-           Version 3.34 © 2025 Copyright by Janathavani | All rights reserved
+           Version 3.35 © 2025 Copyright by Janathavani | All rights reserved
           </p>
           <p className="text-xs text-gray-500">
             By accessing this data, you are bound to company policy of not sharing data outside the company
