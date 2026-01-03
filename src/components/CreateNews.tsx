@@ -87,6 +87,7 @@ const CreateNews: React.FC<CreateNewsProps> = ({ onClose, showAlert }) => {
     return {
       category: '',
       subCategory: '',
+      secondarycategory: '',
       authors: [] as string[],
       title: '',
       subTitle: '',
@@ -892,6 +893,22 @@ const CreateNews: React.FC<CreateNewsProps> = ({ onClose, showAlert }) => {
               {subCategories.map(subCategory => (
                 <option key={subCategory._id} value={subCategory._id}>
                   {subCategory.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Secondary Category</label>
+            <select
+              className="mt-1 block w-full border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+              value={formData.secondarycategory}
+              onChange={(e) => setFormData(prev => ({ ...prev, secondarycategory: e.target.value }))}
+            >
+              <option value="">Select Secondary Category</option>
+              {categories.map(category => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
                 </option>
               ))}
             </select>
