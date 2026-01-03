@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText } from 'lucide-react';
+import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText, ChevronDown, ChevronRight, User, Clock } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../config/axios';
 
@@ -84,6 +84,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     'Miscellaneous',
     'Others'
   ]);
+  const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (activeTab === 'news') {
@@ -303,6 +304,41 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
 
   const getTotalSessionTime = () => {
     return epaperData.reduce((sum, item) => sum + item.sessionTime, 0);
+  };
+
+  const getGroupedEpaperData = () => {
+    const grouped = new Map<string, { customer: any; sessions: EPaperViewItem[] }>();
+
+    epaperData.forEach(item => {
+      if (typeof item.customerId === 'object') {
+        const customerId = item.customerId._id;
+        if (!grouped.has(customerId)) {
+          grouped.set(customerId, {
+            customer: item.customerId,
+            sessions: []
+          });
+        }
+        grouped.get(customerId)!.sessions.push(item);
+      }
+    });
+
+    return Array.from(grouped.values()).map(group => ({
+      ...group,
+      totalSessions: group.sessions.length,
+      totalSessionTime: group.sessions.reduce((sum, session) => sum + session.sessionTime, 0)
+    })).sort((a, b) => b.totalSessions - a.totalSessions);
+  };
+
+  const toggleCustomer = (customerId: string) => {
+    setExpandedCustomers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(customerId)) {
+        newSet.delete(customerId);
+      } else {
+        newSet.add(customerId);
+      }
+      return newSet;
+    });
   };
 
   const handleRefresh = async () => {
@@ -718,43 +754,83 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                     </div>
                   </div>
 
-                  <div className="border border-black bg-white overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 border-b border-black">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">#</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Customer Email</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Phone Number</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">E-Paper Title</th>
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Page Number</th>
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Session Time (s)</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Viewed At</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {epaperData.map((item, index) => (
-                          <tr key={item._id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm text-gray-900">#{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {typeof item.customerId === 'object' ? item.customerId.email : 'N/A'}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {typeof item.customerId === 'object' ? (item.customerId.phoneNumber || '-') : '-'}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.ePaper.title}</td>
-                            <td className="px-4 py-3 text-center text-sm font-semibold text-gray-900">
-                              {item.pageNumber}
-                            </td>
-                            <td className="px-4 py-3 text-center text-sm text-gray-900">
-                              {item.sessionTime}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {formatDateTime(item.createdAt)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="border border-black bg-white">
+                    <div className="space-y-2 p-4">
+                      {getGroupedEpaperData().map((customerGroup, index) => (
+                        <div key={customerGroup.customer._id} className="border border-gray-300 rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => toggleCustomer(customerGroup.customer._id)}
+                            className="w-full bg-gray-50 hover:bg-gray-100 transition-colors p-4 flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="flex items-center gap-2">
+                                {expandedCustomers.has(customerGroup.customer._id) ? (
+                                  <ChevronDown className="h-5 w-5 text-gray-600" />
+                                ) : (
+                                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                                )}
+                                <span className="font-medium text-gray-900">#{index + 1}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-gray-600" />
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {customerGroup.customer.name || customerGroup.customer.email}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Phone className="h-4 w-4" />
+                                <span>{customerGroup.customer.phoneNumber || 'N/A'}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-6">
+                              <div className="text-right">
+                                <p className="text-xs text-gray-500">Total Sessions</p>
+                                <p className="text-lg font-bold text-gray-900">{customerGroup.totalSessions}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-gray-500">Total Time</p>
+                                <p className="text-lg font-bold text-gray-900">{customerGroup.totalSessionTime}s</p>
+                              </div>
+                            </div>
+                          </button>
+                          {expandedCustomers.has(customerGroup.customer._id) && (
+                            <div className="bg-white">
+                              <table className="w-full">
+                                <thead className="bg-gray-100 border-t border-b border-gray-300">
+                                  <tr>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">#</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">E-Paper Title</th>
+                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-700">Page</th>
+                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-700">Session Time</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Viewed At</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                  {customerGroup.sessions.map((session, sessionIndex) => (
+                                    <tr key={session._id} className="hover:bg-gray-50">
+                                      <td className="px-4 py-2 text-xs text-gray-900">{sessionIndex + 1}</td>
+                                      <td className="px-4 py-2 text-xs text-gray-900">{session.ePaper.title}</td>
+                                      <td className="px-4 py-2 text-center text-xs font-semibold text-gray-900">
+                                        {session.pageNumber}
+                                      </td>
+                                      <td className="px-4 py-2 text-center text-xs text-gray-900">
+                                        <div className="flex items-center justify-center gap-1">
+                                          <Clock className="h-3 w-3 text-gray-500" />
+                                          <span>{session.sessionTime}s</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-2 text-xs text-gray-600">
+                                        {formatDateTime(session.createdAt)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </>
               ) : (
