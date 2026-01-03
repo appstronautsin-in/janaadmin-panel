@@ -118,6 +118,18 @@ const ManageActivity: React.FC<ManageActivityProps> = ({ onClose, showAlert }) =
     return filteredActivities.slice(startIndex, endIndex);
   };
 
+  const hasValidCoordinates = (activity: Activity) => {
+    return activity?.location?.coordinates &&
+           Array.isArray(activity.location.coordinates) &&
+           activity.location.coordinates.length === 2 &&
+           activity.location.coordinates[0] !== null &&
+           activity.location.coordinates[1] !== null &&
+           !isNaN(activity.location.coordinates[0]) &&
+           !isNaN(activity.location.coordinates[1]) &&
+           activity.location.coordinates[0] !== 0 &&
+           activity.location.coordinates[1] !== 0;
+  };
+
   const handleViewLocation = (activity: Activity) => {
     setSelectedActivity(activity);
     setShowMap(true);
@@ -132,6 +144,8 @@ const ManageActivity: React.FC<ManageActivityProps> = ({ onClose, showAlert }) =
   }
 
   if (showMap && selectedActivity) {
+    const hasCoords = hasValidCoordinates(selectedActivity);
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg w-full max-w-4xl">
@@ -146,28 +160,36 @@ const ManageActivity: React.FC<ManageActivityProps> = ({ onClose, showAlert }) =
           </div>
           <div className="p-4">
             <div className="h-[500px] w-full rounded-lg overflow-hidden border border-black">
-              <MapContainer
-                center={[selectedActivity.location.coordinates[1], selectedActivity.location.coordinates[0]]}
-                zoom={13}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker
-                  position={[selectedActivity.location.coordinates[1], selectedActivity.location.coordinates[0]]}
-                  icon={customIcon}
+              {hasCoords ? (
+                <MapContainer
+                  center={[selectedActivity.location.coordinates[1], selectedActivity.location.coordinates[0]]}
+                  zoom={13}
+                  style={{ height: '100%', width: '100%' }}
                 >
-                  <Popup>
-                    <div className="text-sm">
-                      <p className="font-semibold">{selectedActivity.userId?.fullname || 'Unnamed User'}</p>
-                      <p>{selectedActivity.userAgent}</p>
-                      <p>Last active: {formatDate(selectedActivity.lastActive)}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              </MapContainer>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <Marker
+                    position={[selectedActivity.location.coordinates[1], selectedActivity.location.coordinates[0]]}
+                    icon={customIcon}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <p className="font-semibold">{selectedActivity.userId?.fullname || 'Unnamed User'}</p>
+                        <p>{selectedActivity.userAgent}</p>
+                        <p>Last active: {formatDate(selectedActivity.lastActive)}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              ) : (
+                <div className="h-full w-full flex flex-col items-center justify-center bg-gray-50">
+                  <MapIcon className="h-16 w-16 text-gray-400 mb-4" />
+                  <p className="text-xl font-semibold text-gray-700">Map Not Available</p>
+                  <p className="text-sm text-gray-500 mt-2">Location coordinates are not available for this activity</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -292,12 +314,19 @@ const ManageActivity: React.FC<ManageActivityProps> = ({ onClose, showAlert }) =
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-gray-400" />
                   <span className="text-gray-600">
-                    {activity.location.coordinates[1]}, {activity.location.coordinates[0]}
+                    {hasValidCoordinates(activity)
+                      ? `${activity.location.coordinates[1]}, ${activity.location.coordinates[0]}`
+                      : 'Not Available'}
                   </span>
                 </div>
                 <button
                   onClick={() => handleViewLocation(activity)}
-                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+                  disabled={!hasValidCoordinates(activity)}
+                  className={`flex items-center space-x-1 ${
+                    hasValidCoordinates(activity)
+                      ? 'text-blue-600 hover:text-blue-800'
+                      : 'text-gray-400 cursor-not-allowed'
+                  }`}
                 >
                   <MapIcon className="h-4 w-4" />
                   <span className="text-sm">View Map</span>
