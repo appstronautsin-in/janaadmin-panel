@@ -325,16 +325,18 @@ const ViewSubscriptions: React.FC<ViewSubscriptionsProps> = ({ customerId, custo
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  End Date
+                  End Date (Auto-calculated)
                 </label>
                 <input
                   type="date"
                   required
-                  className="mt-1 block w-full border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                  readOnly
+                  className="mt-1 block w-full border border-black px-3 py-2 bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-1 focus:ring-black"
                   value={assignForm.endDate}
-                  onChange={(e) => setAssignForm(prev => ({ ...prev, endDate: e.target.value }))}
-                  min={new Date().toISOString().split('T')[0]}
                 />
+                <p className="mt-1 text-sm text-gray-500">
+                  End date is automatically calculated based on the selected package duration
+                </p>
               </div>
 
               <div>
