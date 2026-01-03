@@ -912,6 +912,7 @@ const CreateNews: React.FC<CreateNewsProps> = ({ onClose, showAlert }) => {
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-sm text-gray-500">This Secondary category becomes primary category.</p>
           </div>
 
           <div>
