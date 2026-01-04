@@ -35,7 +35,7 @@ interface ViewNewsProps {
     views: number;
     status: 'Draft' | 'Approved' | 'Published';
     shareable: boolean;
-    isPremiuimContent:boolean;
+    isPremiumContent: boolean;
     isAllowedScreenshot: boolean;
     createdAt: string;
     updatedAt: string;
@@ -219,8 +219,8 @@ const ViewNews: React.FC<ViewNewsProps> = ({ news, onClose }) => {
               {news.isAllowedScreenshot ? 'Comments Allowed' : 'Comments Disabled'}
             </div>
              <div className="flex items-center">
-              <span className={`w-2 h-2 rounded-full mr-2 ${news.isPremiuimContent ? 'bg-green-500' : 'bg-red-500'}`}></span>
-              {news.isPremiuimContent ? 'Premiuim Content' : 'Not Premiuim Content'}
+              <span className={`w-2 h-2 rounded-full mr-2 ${news.isPremiumContent ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {news.isPremiumContent ? 'Premium Content' : 'Not Premium Content'}
             </div>
           </div>
         </div>
