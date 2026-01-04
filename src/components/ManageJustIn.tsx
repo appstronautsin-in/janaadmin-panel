@@ -16,6 +16,11 @@ interface JustIn {
   expiry: string;
   createdAt: string;
   updatedAt: string;
+  addedBy?: {
+    _id: string;
+    fullname: string;
+    position: string;
+  };
 }
 
 interface ManageJustInProps {
@@ -206,6 +211,13 @@ const ManageJustIn: React.FC<ManageJustInProps> = ({ showAlert }) => {
                   </p>
 
                   <div className="space-y-2 text-sm">
+                    {justIn.addedBy && (
+                      <div className="text-gray-600">
+                        <span className="font-medium">Added By:</span> {justIn.addedBy.fullname}
+                        {justIn.addedBy.position && <span className="text-xs ml-1">({justIn.addedBy.position})</span>}
+                      </div>
+                    )}
+
                     <div className="flex items-center space-x-2 text-gray-600">
                       <Eye className="h-4 w-4" />
                       <span>Views: {views}</span>
