@@ -23,6 +23,10 @@ interface News {
     _id: string;
     name: string;
   } | null;
+  secondarycategory: {
+    _id: string;
+    name: string;
+  } | null;
   image: string[];
   authors: Array<{
     _id: string;
