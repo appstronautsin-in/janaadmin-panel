@@ -119,9 +119,11 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
   ];
 
   useEffect(() => {
-    fetchNewsData();
-    fetchCategories();
-    fetchAuthors();
+    const loadData = async () => {
+      await Promise.all([fetchCategories(), fetchAuthors()]);
+      await fetchNewsData();
+    };
+    loadData();
   }, [newsId]);
 
   const fetchNewsData = async () => {
@@ -137,10 +139,12 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
       const createdDate = `${year}-${month}-${day}`;
       const createdTime = createdAt.toTimeString().slice(0, 5);
 
+      const secondaryCategoryId = newsData.secondaryCategory?._id || newsData.secondarycategory?._id || '';
+
       setFormData({
         category: newsData.category?._id || '',
         subCategory: newsData.subCategory?._id || '',
-        secondaryCategory: newsData.secondarycategory?._id || '',
+        secondaryCategory: secondaryCategoryId,
         authors: newsData.authors.map((author: any) => author._id),
         title: newsData.title,
         subTitle: newsData.subTitle,
