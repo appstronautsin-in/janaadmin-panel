@@ -13,6 +13,10 @@ interface ViewNewsProps {
       _id: string;
       name: string;
     } | null;
+    secondaryCategory: {
+      _id: string;
+      name: string;
+    } | null;
     image: string[];
     authors: Array<{
       _id: string;
@@ -139,6 +143,11 @@ const ViewNews: React.FC<ViewNewsProps> = ({ news, onClose }) => {
                   <> / <span className="font-medium">{news.subCategory.name}</span></>
                 )}
               </p>
+              {news.secondaryCategory && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Secondary Category: <span className="font-medium">{news.secondaryCategory.name}</span>
+                </p>
+              )}
               <p className="text-sm text-gray-600 mt-1">
                 Status: <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium border ${getStatusBadgeClass(news.status)}`}>
                   {news.status}

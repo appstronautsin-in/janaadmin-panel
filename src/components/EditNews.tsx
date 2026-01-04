@@ -67,6 +67,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
   const [formData, setFormData] = useState({
     category: '',
     subCategory: '',
+    secondaryCategory: '',
     authors: [] as string[],
     title: '',
     subTitle: '',
@@ -139,6 +140,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
       setFormData({
         category: newsData.category?._id || '',
         subCategory: newsData.subCategory?._id || '',
+        secondaryCategory: newsData.secondaryCategory?._id || '',
         authors: newsData.authors.map((author: any) => author._id),
         title: newsData.title,
         subTitle: newsData.subTitle,
@@ -805,6 +807,22 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
                 {subCategories.map(subCategory => (
                   <option key={subCategory._id} value={subCategory._id}>
                     {subCategory.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Secondary Category</label>
+              <select
+                className="mt-1 block w-full border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                value={formData.secondaryCategory}
+                onChange={(e) => setFormData(prev => ({ ...prev, secondaryCategory: e.target.value }))}
+              >
+                <option value="">Select Secondary Category</option>
+                {categories.map(category => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
                   </option>
                 ))}
               </select>
