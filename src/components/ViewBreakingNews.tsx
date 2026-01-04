@@ -13,6 +13,11 @@ interface ViewBreakingNewsProps {
     expiry: string;
     createdAt: string;
     updatedAt: string;
+    addedBy?: {
+      _id: string;
+      fullname: string;
+      position: string;
+    };
   };
   onClose: () => void;
 }
@@ -120,6 +125,20 @@ const ViewBreakingNews: React.FC<ViewBreakingNewsProps> = ({ news, onClose }) =>
                 )}
               </div>
             </div>
+
+            {news.addedBy && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700">Added By</h3>
+                <p className="mt-1 text-sm text-gray-900">
+                  {news.addedBy.fullname}
+                </p>
+                {news.addedBy.position && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    {news.addedBy.position}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <h3 className="text-sm font-medium text-gray-700">Expiry Date</h3>

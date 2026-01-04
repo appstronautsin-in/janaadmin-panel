@@ -17,6 +17,11 @@ interface BreakingNews {
   expiry: string;
   createdAt: string;
   updatedAt: string;
+  addedBy?: {
+    _id: string;
+    fullname: string;
+    position: string;
+  };
 }
 
 interface ManageBreakingNewsProps {
@@ -212,6 +217,13 @@ const ManageBreakingNews: React.FC<ManageBreakingNewsProps> = ({ showAlert }) =>
                     {news.source && (
                       <div className="text-gray-600">
                         <span className="font-medium">Source:</span> {news.source}
+                      </div>
+                    )}
+
+                    {news.addedBy && (
+                      <div className="text-gray-600">
+                        <span className="font-medium">Added By:</span> {news.addedBy.fullname}
+                        {news.addedBy.position && <span className="text-xs ml-1">({news.addedBy.position})</span>}
                       </div>
                     )}
 
