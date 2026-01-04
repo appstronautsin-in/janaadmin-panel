@@ -13,7 +13,7 @@ interface ViewNewsProps {
       _id: string;
       name: string;
     } | null;
-    secondaryCategory: {
+    secondarycategory: {
       _id: string;
       name: string;
     } | null;
@@ -143,9 +143,9 @@ const ViewNews: React.FC<ViewNewsProps> = ({ news, onClose }) => {
                   <> / <span className="font-medium">{news.subCategory.name}</span></>
                 )}
               </p>
-              {news.secondaryCategory && (
+              {news.secondarycategory && (
                 <p className="text-sm text-gray-600 mt-1">
-                  Secondary Category: <span className="font-medium">{news.secondaryCategory.name}</span>
+                  Secondary Category: <span className="font-medium">{news.secondarycategory.name}</span>
                 </p>
               )}
               <p className="text-sm text-gray-600 mt-1">

@@ -140,7 +140,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
       setFormData({
         category: newsData.category?._id || '',
         subCategory: newsData.subCategory?._id || '',
-        secondaryCategory: newsData.secondaryCategory?._id || '',
+        secondaryCategory: newsData.secondarycategory?._id || '',
         authors: newsData.authors.map((author: any) => author._id),
         title: newsData.title,
         subTitle: newsData.subTitle,
