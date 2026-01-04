@@ -126,6 +126,12 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
     loadData();
   }, [newsId]);
 
+  useEffect(() => {
+    console.log('Form data secondaryCategory changed:', formData.secondaryCategory);
+    console.log('Available categories:', categories);
+    console.log('Categories IDs:', categories.map(c => c._id));
+  }, [formData.secondaryCategory, categories]);
+
   const fetchNewsData = async () => {
     try {
       const response = await api.get(`/v1/news/${newsId}`);
@@ -141,7 +147,14 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
 
       const secondaryCategoryId = newsData.secondaryCategory?._id || newsData.secondarycategory?._id || '';
 
-      setFormData({
+      console.log('News Data:', {
+        secondaryCategory: newsData.secondaryCategory,
+        secondarycategory: newsData.secondarycategory,
+        extractedId: secondaryCategoryId,
+        allNewsData: newsData
+      });
+
+      const newFormData = {
         category: newsData.category?._id || '',
         subCategory: newsData.subCategory?._id || '',
         secondaryCategory: secondaryCategoryId,
@@ -158,7 +171,10 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
         viewsVisible: newsData.viewsVisible || false,
         visibleComment: newsData.visibleComment || false,
         viwsCountToVisible: newsData.viwsCountToVisible || 0
-      });
+      };
+
+      console.log('Setting form data:', newFormData);
+      setFormData(newFormData);
 
       setContent(newsData.content);
       setExistingImages(newsData.image || []);
@@ -179,6 +195,7 @@ const EditNews: React.FC<EditNewsProps> = ({ newsId, onClose, onSuccess, showAle
   const fetchCategories = async () => {
     try {
       const response = await api.get('/v1/category/all');
+      console.log('Fetched categories:', response.data);
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
