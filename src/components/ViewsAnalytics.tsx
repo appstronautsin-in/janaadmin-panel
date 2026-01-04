@@ -542,10 +542,14 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
       </div>
 
       {activeTab === 'epaper' ? (
-        <div className="grid grid-cols-4 gap-4 p-6 border-b border-black bg-white">
+        <div className="grid grid-cols-5 gap-4 p-6 border-b border-black bg-white">
           <div className="text-center">
             <p className="text-sm text-gray-600">Total Views</p>
             <p className="text-2xl font-bold text-gray-900">{epaperData.length}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Customers</p>
+            <p className="text-2xl font-bold text-gray-900">{getGroupedEpaperData().length}</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">Unique E-Papers</p>
