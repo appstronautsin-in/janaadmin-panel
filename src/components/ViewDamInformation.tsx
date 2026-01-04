@@ -31,6 +31,10 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
     });
   };
 
+  if (!damInfo) {
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white border border-black shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -49,13 +53,15 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
 
         <div className="p-6 space-y-6">
           {/* Image */}
-          <div className="text-center">
-            <img
-              src={`${IMAGE_BASE_URL}/${damInfo.image}`}
-              alt={damInfo.title}
-              className="max-w-full h-auto border border-black mx-auto rounded-lg"
-            />
-          </div>
+          {damInfo.image && (
+            <div className="text-center">
+              <img
+                src={`${IMAGE_BASE_URL}/${damInfo.image}`}
+                alt={damInfo.title}
+                className="max-w-full h-auto border border-black mx-auto rounded-lg"
+              />
+            </div>
+          )}
 
           {/* Title and Status */}
           <div className="border-b border-black pb-4">
@@ -78,7 +84,7 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
               <h3 className="text-xl font-semibold text-gray-900">Data Points</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {damInfo.points.map((point) => (
+              {damInfo.points?.map((point) => (
                 <div
                   key={point._id}
                   className="bg-gray-50 border border-black p-4 rounded-lg"
@@ -116,7 +122,7 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
             <div>
               <h3 className="text-sm font-medium text-gray-700">Total Data Points</h3>
               <p className="mt-1 text-sm text-gray-900">
-                {damInfo.points.length} points
+                {damInfo.points?.length || 0} points
               </p>
             </div>
 
