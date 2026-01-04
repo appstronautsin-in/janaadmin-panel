@@ -3,7 +3,7 @@ import { X, Database, BarChart3 } from 'lucide-react';
 import { IMAGE_BASE_URL } from '../config/constants';
 
 interface ViewDamInformationProps {
-  damInfo: {
+  dam: {
     _id: string;
     title: string;
     points: Array<{
@@ -20,7 +20,7 @@ interface ViewDamInformationProps {
   onClose: () => void;
 }
 
-const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClose }) => {
+const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ dam, onClose }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -31,7 +31,7 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
     });
   };
 
-  if (!damInfo) {
+  if (!dam) {
     return null;
   }
 
@@ -53,11 +53,11 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
 
         <div className="p-6 space-y-6">
           {/* Image */}
-          {damInfo.image && (
+          {dam.image && (
             <div className="text-center">
               <img
-                src={`${IMAGE_BASE_URL}/${damInfo.image}`}
-                alt={damInfo.title}
+                src={`${IMAGE_BASE_URL}/${dam.image}`}
+                alt={dam.title}
                 className="max-w-full h-auto border border-black mx-auto rounded-lg"
               />
             </div>
@@ -66,13 +66,13 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
           {/* Title and Status */}
           <div className="border-b border-black pb-4">
             <div className="flex items-start justify-between mb-2">
-              <h1 className="text-3xl font-bold text-gray-900 flex-1">{damInfo.title}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 flex-1">{dam.title}</h1>
               <span className={`inline-flex items-center px-3 py-1 text-sm font-medium border ${
-                damInfo.isActive
+                dam.isActive
                   ? 'bg-green-100 text-green-800 border-green-800'
                   : 'bg-gray-100 text-gray-800 border-gray-800'
               } ml-4`}>
-                {damInfo.isActive ? 'Active' : 'Inactive'}
+                {dam.isActive ? 'Active' : 'Inactive'}
               </span>
             </div>
           </div>
@@ -84,7 +84,7 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
               <h3 className="text-xl font-semibold text-gray-900">Data Points</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {damInfo.points?.map((point) => (
+              {dam.points?.map((point) => (
                 <div
                   key={point._id}
                   className="bg-gray-50 border border-black p-4 rounded-lg"
@@ -108,28 +108,28 @@ const ViewDamInformation: React.FC<ViewDamInformationProps> = ({ damInfo, onClos
             <div>
               <h3 className="text-sm font-medium text-gray-700">Created</h3>
               <p className="mt-1 text-sm text-gray-900">
-                {formatDate(damInfo.createdAt)}
+                {formatDate(dam.createdAt)}
               </p>
             </div>
 
             <div>
               <h3 className="text-sm font-medium text-gray-700">Last Updated</h3>
               <p className="mt-1 text-sm text-gray-900">
-                {formatDate(damInfo.updatedAt)}
+                {formatDate(dam.updatedAt)}
               </p>
             </div>
 
             <div>
               <h3 className="text-sm font-medium text-gray-700">Total Data Points</h3>
               <p className="mt-1 text-sm text-gray-900">
-                {damInfo.points?.length || 0} points
+                {dam.points?.length || 0} points
               </p>
             </div>
 
             <div>
               <h3 className="text-sm font-medium text-gray-700">Information ID</h3>
               <p className="mt-1 text-sm text-gray-900 font-mono">
-                {damInfo._id}
+                {dam._id}
               </p>
             </div>
           </div>
