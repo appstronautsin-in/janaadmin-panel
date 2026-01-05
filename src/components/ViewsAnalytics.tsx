@@ -324,6 +324,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
 
     return Array.from(grouped.values()).map(group => ({
       ...group,
+      sessions: group.sessions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
       totalSessions: group.sessions.length,
       totalSessionTime: group.sessions.reduce((sum, session) => sum + session.sessionTime, 0)
     })).sort((a, b) => b.totalSessions - a.totalSessions);
