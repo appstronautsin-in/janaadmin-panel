@@ -100,7 +100,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     setLoading(true);
     setCategoryLoading(true);
     try {
-      const response = await api.get('/v1/news');
+      const response = await api.get('/v1/news/forviews');
       const allNews = response.data;
 
       const uniqueCategories = Array.from(
