@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText, ChevronDown, ChevronRight, User, Clock } from 'lucide-react';
+import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText, ChevronDown, ChevronRight, User, Clock, ChevronLeft } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../config/axios';
 
@@ -85,6 +85,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     'Others'
   ]);
   const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
+  const [newsCurrentPage, setNewsCurrentPage] = useState(1);
+  const newsItemsPerPage = 18;
 
   useEffect(() => {
     if (activeTab === 'news') {
@@ -388,6 +390,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setPhoneSearch('');
             setCustomerSearch('');
             setDateFilter('today');
+            setNewsCurrentPage(1);
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
             activeTab === 'news'
@@ -440,7 +443,10 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             <label className="text-sm font-medium text-gray-700">Filter by Category:</label>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setNewsCurrentPage(1);
+              }}
               className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black min-w-[200px]"
               disabled={categoryLoading && activeTab === 'news'}
             >
@@ -593,45 +599,80 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
           <div className="space-y-6">
             {activeTab === 'news' ? (
               newsData.length > 0 ? (
-                <div className="border border-black bg-white">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-black">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Rank</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Title</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Category</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Views</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Shared</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Created</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {newsData.map((item, index) => (
-                        <tr key={item._id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-900">#{index + 1}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{item.title}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {item.category?.name || 'Uncategorized'}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Eye className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm font-semibold text-gray-900">
-                                {item.views.toLocaleString()}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900 font-semibold">
-                            {item.sharedCount || 0}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {formatDate(item.createdAt)}
-                          </td>
+                <>
+                  <div className="border border-black bg-white">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-black">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Rank</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Title</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Category</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Views</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Shared</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Created</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {newsData
+                          .slice((newsCurrentPage - 1) * newsItemsPerPage, newsCurrentPage * newsItemsPerPage)
+                          .map((item, index) => {
+                            const actualIndex = (newsCurrentPage - 1) * newsItemsPerPage + index;
+                            return (
+                              <tr key={item._id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-sm text-gray-900">#{actualIndex + 1}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{item.title}</td>
+                                <td className="px-4 py-3 text-sm text-gray-600">
+                                  {item.category?.name || 'Uncategorized'}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <Eye className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm font-semibold text-gray-900">
+                                      {item.views.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900 font-semibold">
+                                  {item.sharedCount || 0}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-600">
+                                  {formatDate(item.createdAt)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {newsData.length > newsItemsPerPage && (
+                    <div className="flex items-center justify-between border border-black bg-white p-4 mt-4">
+                      <button
+                        onClick={() => setNewsCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={newsCurrentPage === 1}
+                        className="flex items-center gap-2 px-4 py-2 border border-black bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">
+                          Page {newsCurrentPage} of {Math.ceil(newsData.length / newsItemsPerPage)}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          ({newsData.length} total items)
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setNewsCurrentPage(prev => Math.min(Math.ceil(newsData.length / newsItemsPerPage), prev + 1))}
+                        disabled={newsCurrentPage >= Math.ceil(newsData.length / newsItemsPerPage)}
+                        className="flex items-center gap-2 px-4 py-2 border border-black bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <Eye className="h-16 w-16 text-gray-300 mx-auto mb-4" />
