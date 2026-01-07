@@ -142,8 +142,8 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
   const handleToggleSpam = async (item: SubmittedNews) => {
     const newSpamStatus = !item.spam;
     const confirmMessage = newSpamStatus
-      ? 'Are you sure you want to mark this news as spam?'
-      : 'Are you sure you want to remove spam status from this news?';
+      ? 'Are you sure you want to mark this submitter as spam?'
+      : 'Are you sure you want to remove spam status from this submitter?';
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -151,7 +151,7 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
 
     setSpamLoading(item._id);
     try {
-      await api.put(`/v1/submit-news/update-spam/${item._id}`, {
+      await api.put(`/v1/customer/auth/update-spam/${item.userId}`, {
         spam: newSpamStatus
       });
 
@@ -160,7 +160,7 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
       ));
 
       showAlert(
-        newSpamStatus ? 'News marked as spam' : 'Spam status removed',
+        newSpamStatus ? 'Submitter marked as spam' : 'Spam status removed',
         'success'
       );
     } catch (error) {
