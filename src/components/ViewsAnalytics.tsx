@@ -71,6 +71,10 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
+  const [newsDateFilter, setNewsDateFilter] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [classifiedCategories] = useState<string[]>([
     'Wanted',
     'Real Estate',
@@ -96,13 +100,14 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     } else if (activeTab === 'epaper') {
       fetchEpaperData();
     }
-  }, [activeTab, selectedCategory, phoneSearch, customerSearch, dateFilter, epaperDateFilter]);
+  }, [activeTab, selectedCategory, phoneSearch, customerSearch, dateFilter, epaperDateFilter, newsDateFilter]);
 
   const fetchNewsData = async () => {
     setLoading(true);
     setCategoryLoading(true);
     try {
-      const response = await api.get('/v1/news/forviews');
+      const url = newsDateFilter ? `/v1/news/forviews?date=${newsDateFilter}` : '/v1/news/forviews';
+      const response = await api.get(url);
       const allNews = response.data;
 
       const uniqueCategories = Array.from(
@@ -391,6 +396,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setCustomerSearch('');
             setDateFilter('today');
             setNewsCurrentPage(1);
+            const today = new Date();
+            setNewsDateFilter(today.toISOString().split('T')[0]);
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
             activeTab === 'news'
@@ -437,6 +444,22 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
       </div>
 
       <div className="p-6 border-b border-black bg-white space-y-4">
+        {activeTab === 'news' && (
+          <div className="flex items-center gap-4">
+            <Filter className="h-5 w-5 text-gray-600" />
+            <label className="text-sm font-medium text-gray-700">Select Date:</label>
+            <input
+              type="date"
+              value={newsDateFilter}
+              onChange={(e) => {
+                setNewsDateFilter(e.target.value);
+                setNewsCurrentPage(1);
+              }}
+              className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
+            />
+          </div>
+        )}
+
         {activeTab !== 'epaper' && (
           <div className="flex items-center gap-4">
             <Filter className="h-5 w-5 text-gray-600" />
