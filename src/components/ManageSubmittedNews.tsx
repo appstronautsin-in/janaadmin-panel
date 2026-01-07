@@ -10,15 +10,17 @@ interface ManageSubmittedNewsProps {
 interface SubmittedNews {
   _id: string;
   name: string;
-  userId: string;
+  userId: {
+    _id: string;
+    email: string;
+    spam: boolean;
+  };
   platform: string;
   email: string;
   phone: string;
   category: {
     _id: string;
     name: string;
-    image: string;
-    designIndex: number;
   };
   title: string;
   files: string[];
@@ -27,7 +29,6 @@ interface SubmittedNews {
   isPublished: boolean;
   isRejected: boolean;
   rejectionReason?: string;
-  spam?: boolean;
 }
 
 const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) => {
@@ -140,7 +141,7 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
   };
 
   const handleToggleSpam = async (item: SubmittedNews) => {
-    const newSpamStatus = !item.spam;
+    const newSpamStatus = !item.userId.spam;
     const confirmMessage = newSpamStatus
       ? 'Are you sure you want to mark this submitter as spam?'
       : 'Are you sure you want to remove spam status from this submitter?';
@@ -151,12 +152,14 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
 
     setSpamLoading(item._id);
     try {
-      await api.put(`/v1/customer/auth/update-spam/${item.userId}`, {
+      await api.put(`/v1/customer/auth/update-spam/${item.userId._id}`, {
         spam: newSpamStatus
       });
 
       setSubmittedNews(submittedNews.map(news =>
-        news._id === item._id ? { ...news, spam: newSpamStatus } : news
+        news.userId._id === item.userId._id
+          ? { ...news, userId: { ...news.userId, spam: newSpamStatus } }
+          : news
       ));
 
       showAlert(
@@ -203,7 +206,7 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
             Pending
           </span>
         )}
-        {item.spam && (
+        {item.userId.spam && (
           <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded">
             SPAM
           </span>
@@ -424,9 +427,16 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredNews.map((item) => (
-                    <tr key={item._id} className="hover:bg-gray-50 border-b border-black">
+                    <tr key={item._id} className={`hover:bg-gray-50 border-b border-black ${item.userId.spam ? 'bg-orange-50' : ''}`}>
                       <td className="px-6 py-4 whitespace-nowrap border-r border-black">
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                          {item.userId.spam && (
+                            <span className="px-2 py-0.5 text-xs font-bold bg-orange-600 text-white rounded shadow-sm">
+                              SPAM USER
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 border-r border-black">
                         <div className="text-sm text-gray-900">{item.email}</div>
@@ -493,15 +503,15 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
                             onClick={() => handleToggleSpam(item)}
                             disabled={spamLoading === item._id}
                             className={`border p-1 disabled:opacity-50 ${
-                              item.spam
+                              item.userId.spam
                                 ? 'text-green-600 hover:text-green-800 border-green-600 hover:border-green-800'
                                 : 'text-orange-600 hover:text-orange-800 border-orange-600 hover:border-orange-800'
                             }`}
-                            title={item.spam ? 'Remove Spam Status' : 'Mark as Spam'}
+                            title={item.userId.spam ? 'Remove Spam Status' : 'Mark as Spam'}
                           >
                             {spamLoading === item._id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : item.spam ? (
+                            ) : item.userId.spam ? (
                               <CheckCircle className="h-4 w-4" />
                             ) : (
                               <Ban className="h-4 w-4" />
