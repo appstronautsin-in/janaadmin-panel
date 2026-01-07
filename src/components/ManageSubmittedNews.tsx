@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, Trash2, FileText, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Eye, Trash2, FileText, ArrowLeft, CheckCircle, XCircle, Ban } from 'lucide-react';
 import api from '../config/axios';
 import { IMAGE_BASE_URL } from '../config/constants';
 
@@ -27,6 +27,7 @@ interface SubmittedNews {
   isPublished: boolean;
   isRejected: boolean;
   rejectionReason?: string;
+  spam?: boolean;
 }
 
 const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) => {
@@ -35,6 +36,7 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [viewingNews, setViewingNews] = useState<SubmittedNews | null>(null);
   const [statusLoading, setStatusLoading] = useState<string | null>(null);
+  const [spamLoading, setSpamLoading] = useState<string | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedNewsForReject, setSelectedNewsForReject] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -137,6 +139,38 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
     }
   };
 
+  const handleToggleSpam = async (item: SubmittedNews) => {
+    const newSpamStatus = !item.spam;
+    const confirmMessage = newSpamStatus
+      ? 'Are you sure you want to mark this news as spam?'
+      : 'Are you sure you want to remove spam status from this news?';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setSpamLoading(item._id);
+    try {
+      await api.put(`/v1/submit-news/update-spam/${item._id}`, {
+        spam: newSpamStatus
+      });
+
+      setSubmittedNews(submittedNews.map(news =>
+        news._id === item._id ? { ...news, spam: newSpamStatus } : news
+      ));
+
+      showAlert(
+        newSpamStatus ? 'News marked as spam' : 'Spam status removed',
+        'success'
+      );
+    } catch (error) {
+      console.error('Error updating spam status:', error);
+      showAlert('Failed to update spam status', 'error');
+    } finally {
+      setSpamLoading(null);
+    }
+  };
+
   const handleView = (item: SubmittedNews) => {
     setViewingNews(item);
   };
@@ -152,24 +186,29 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
   };
 
   const getStatusBadge = (item: SubmittedNews) => {
-    if (item.isPublished) {
-      return (
-        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-          Published
-        </span>
-      );
-    }
-    if (item.isRejected) {
-      return (
-        <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
-          Rejected
-        </span>
-      );
-    }
     return (
-      <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
-        Pending
-      </span>
+      <div className="flex flex-col gap-1">
+        {item.isPublished && (
+          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+            Published
+          </span>
+        )}
+        {item.isRejected && (
+          <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
+            Rejected
+          </span>
+        )}
+        {!item.isPublished && !item.isRejected && (
+          <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
+            Pending
+          </span>
+        )}
+        {item.spam && (
+          <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded">
+            SPAM
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -450,6 +489,24 @@ const ManageSubmittedNews: React.FC<ManageSubmittedNewsProps> = ({ showAlert }) 
                               </button>
                             </>
                           )}
+                          <button
+                            onClick={() => handleToggleSpam(item)}
+                            disabled={spamLoading === item._id}
+                            className={`border p-1 disabled:opacity-50 ${
+                              item.spam
+                                ? 'text-green-600 hover:text-green-800 border-green-600 hover:border-green-800'
+                                : 'text-orange-600 hover:text-orange-800 border-orange-600 hover:border-orange-800'
+                            }`}
+                            title={item.spam ? 'Remove Spam Status' : 'Mark as Spam'}
+                          >
+                            {spamLoading === item._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : item.spam ? (
+                              <CheckCircle className="h-4 w-4" />
+                            ) : (
+                              <Ban className="h-4 w-4" />
+                            )}
+                          </button>
                           <button
                             onClick={() => handleDelete(item._id)}
                             disabled={deleteLoading === item._id}
