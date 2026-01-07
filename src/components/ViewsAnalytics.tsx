@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText, ChevronDown, ChevronRight, User, Clock, ChevronLeft } from 'lucide-react';
+import { Loader2, Eye, Filter, Phone, MessageCircle, Globe, MapPin, Search, RefreshCw, FileText, ChevronDown, ChevronRight, User, Clock, ChevronLeft, ArrowUp, ArrowDown } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../config/axios';
 
@@ -16,6 +16,7 @@ interface NewsItem {
   _id: string;
   title: string;
   views: number;
+  sharedCount?: number;
   category: {
     _id: string;
     name: string;
@@ -91,6 +92,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
   const [newsCurrentPage, setNewsCurrentPage] = useState(1);
   const newsItemsPerPage = 18;
+  const [newsSortOrder, setNewsSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     if (activeTab === 'news') {
@@ -100,7 +102,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     } else if (activeTab === 'epaper') {
       fetchEpaperData();
     }
-  }, [activeTab, selectedCategory, phoneSearch, customerSearch, dateFilter, epaperDateFilter, newsDateFilter]);
+  }, [activeTab, selectedCategory, phoneSearch, customerSearch, dateFilter, epaperDateFilter, newsDateFilter, newsSortOrder]);
 
   const fetchNewsData = async () => {
     setLoading(true);
@@ -130,7 +132,9 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
         );
       }
 
-      const sortedNews = filteredNews.sort((a: NewsItem, b: NewsItem) => b.views - a.views);
+      const sortedNews = filteredNews.sort((a: NewsItem, b: NewsItem) =>
+        newsSortOrder === 'desc' ? b.views - a.views : a.views - b.views
+      );
       setNewsData(sortedNews);
     } catch (error) {
       console.error('Error fetching news data:', error);
@@ -635,7 +639,41 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Rank</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Title</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Category</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Views</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">
+                            <div className="flex items-center gap-2">
+                              <span>Views</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => {
+                                    setNewsSortOrder('desc');
+                                    setNewsCurrentPage(1);
+                                  }}
+                                  className={`p-1 rounded transition-colors ${
+                                    newsSortOrder === 'desc'
+                                      ? 'bg-black text-white'
+                                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                  }`}
+                                  title="Sort descending (high to low)"
+                                >
+                                  <ArrowDown className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setNewsSortOrder('asc');
+                                    setNewsCurrentPage(1);
+                                  }}
+                                  className={`p-1 rounded transition-colors ${
+                                    newsSortOrder === 'asc'
+                                      ? 'bg-black text-white'
+                                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                  }`}
+                                  title="Sort ascending (low to high)"
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Shared</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Created</th>
                         </tr>
