@@ -107,7 +107,10 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     setCategoryLoading(true);
     try {
       const url = newsDateFilter ? `/v1/news/forviews?date=${newsDateFilter}` : '/v1/news/forviews';
+      console.log('Fetching news with URL:', url);
+      console.log('Date filter value:', newsDateFilter);
       const response = await api.get(url);
+      console.log('API Response:', response.data);
       const allNews = response.data;
 
       const uniqueCategories = Array.from(
@@ -452,11 +455,13 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
               type="date"
               value={newsDateFilter}
               onChange={(e) => {
+                console.log('Date changed to:', e.target.value);
                 setNewsDateFilter(e.target.value);
                 setNewsCurrentPage(1);
               }}
               className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
             />
+            <span className="text-xs text-gray-500">Selected: {newsDateFilter}</span>
           </div>
         )}
 
