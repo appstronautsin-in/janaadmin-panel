@@ -633,9 +633,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                 className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
               >
                 <img
-                  src={settings.antharashtriyaBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  src={settings.antharashtriyaBigDesign ? '/2.png' : '/1.png'}
                   alt={settings.antharashtriyaBigDesign ? 'Big Design' : 'Compact Design'}
-                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                  className="w-full max-w-xs mx-auto h-auto rounded shadow-md border-2 border-gray-300"
                 />
               </button>
               <p className="text-xs text-center mt-2 text-gray-600">
@@ -651,9 +651,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                 className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
               >
                 <img
-                  src={settings.rajakiyaBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  src={settings.rajakiyaBigDesign ? '/2.png' : '/1.png'}
                   alt={settings.rajakiyaBigDesign ? 'Big Design' : 'Compact Design'}
-                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                  className="w-full max-w-xs mx-auto h-auto rounded shadow-md border-2 border-gray-300"
                 />
               </button>
               <p className="text-xs text-center mt-2 text-gray-600">
@@ -669,9 +669,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                 className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
               >
                 <img
-                  src={settings.suddiBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  src={settings.suddiBigDesign ? '/2.png' : '/1.png'}
                   alt={settings.suddiBigDesign ? 'Big Design' : 'Compact Design'}
-                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                  className="w-full max-w-xs mx-auto h-auto rounded shadow-md border-2 border-gray-300"
                 />
               </button>
               <p className="text-xs text-center mt-2 text-gray-600">
@@ -687,9 +687,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                 className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
               >
                 <img
-                  src={settings.suddiVaividyaBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  src={settings.suddiVaividyaBigDesign ? '/2.png' : '/1.png'}
                   alt={settings.suddiVaividyaBigDesign ? 'Big Design' : 'Compact Design'}
-                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                  className="w-full max-w-xs mx-auto h-auto rounded shadow-md border-2 border-gray-300"
                 />
               </button>
               <p className="text-xs text-center mt-2 text-gray-600">
@@ -705,9 +705,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                 className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
               >
                 <img
-                  src={settings.rajyaRashtraBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  src={settings.rajyaRashtraBigDesign ? '/2.png' : '/1.png'}
                   alt={settings.rajyaRashtraBigDesign ? 'Big Design' : 'Compact Design'}
-                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                  className="w-full max-w-xs mx-auto h-auto rounded shadow-md border-2 border-gray-300"
                 />
               </button>
               <p className="text-xs text-center mt-2 text-gray-600">
