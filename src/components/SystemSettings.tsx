@@ -39,6 +39,11 @@ interface Settings {
   rajyaRashtraMaxCount: number;
   sankshipthaMinCount: number;
   sankshipthaMaxCount: number;
+  antharashtriyaBigDesign?: boolean;
+  rajakiyaBigDesign?: boolean;
+  suddiBigDesign?: boolean;
+  suddiVaividyaBigDesign?: boolean;
+  rajyaRashtraBigDesign?: boolean;
 }
 
 interface SystemSettingsProps {
@@ -124,7 +129,12 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
         rajyaRashtraMinCount: settings.rajyaRashtraMinCount,
         rajyaRashtraMaxCount: settings.rajyaRashtraMaxCount,
         sankshipthaMinCount: settings.sankshipthaMinCount,
-        sankshipthaMaxCount: settings.sankshipthaMaxCount
+        sankshipthaMaxCount: settings.sankshipthaMaxCount,
+        antharashtriyaBigDesign: settings.antharashtriyaBigDesign,
+        rajakiyaBigDesign: settings.rajakiyaBigDesign,
+        suddiBigDesign: settings.suddiBigDesign,
+        suddiVaividyaBigDesign: settings.suddiVaividyaBigDesign,
+        rajyaRashtraBigDesign: settings.rajyaRashtraBigDesign
       };
 
       await api.put(`/v1/app/settings/${settings._id}`, updateData);
@@ -606,6 +616,103 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 pt-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Category Design Settings</h2>
+          <p className="text-sm text-gray-600 mb-6">Click on an image to toggle between compact and big design layouts</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-gray-50 p-4 rounded border border-gray-300">
+              <h3 className="text-md font-medium text-gray-800 mb-3">Antharashtriya</h3>
+              <button
+                type="button"
+                onClick={() => handleInputChange('antharashtriyaBigDesign', !settings.antharashtriyaBigDesign)}
+                className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
+              >
+                <img
+                  src={settings.antharashtriyaBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  alt={settings.antharashtriyaBigDesign ? 'Big Design' : 'Compact Design'}
+                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                />
+              </button>
+              <p className="text-xs text-center mt-2 text-gray-600">
+                {settings.antharashtriyaBigDesign ? 'Big Design Selected' : 'Compact Design Selected'}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded border border-gray-300">
+              <h3 className="text-md font-medium text-gray-800 mb-3">Rajakiya</h3>
+              <button
+                type="button"
+                onClick={() => handleInputChange('rajakiyaBigDesign', !settings.rajakiyaBigDesign)}
+                className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
+              >
+                <img
+                  src={settings.rajakiyaBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  alt={settings.rajakiyaBigDesign ? 'Big Design' : 'Compact Design'}
+                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                />
+              </button>
+              <p className="text-xs text-center mt-2 text-gray-600">
+                {settings.rajakiyaBigDesign ? 'Big Design Selected' : 'Compact Design Selected'}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded border border-gray-300">
+              <h3 className="text-md font-medium text-gray-800 mb-3">Suddi</h3>
+              <button
+                type="button"
+                onClick={() => handleInputChange('suddiBigDesign', !settings.suddiBigDesign)}
+                className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
+              >
+                <img
+                  src={settings.suddiBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  alt={settings.suddiBigDesign ? 'Big Design' : 'Compact Design'}
+                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                />
+              </button>
+              <p className="text-xs text-center mt-2 text-gray-600">
+                {settings.suddiBigDesign ? 'Big Design Selected' : 'Compact Design Selected'}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded border border-gray-300">
+              <h3 className="text-md font-medium text-gray-800 mb-3">Suddi Vaividya</h3>
+              <button
+                type="button"
+                onClick={() => handleInputChange('suddiVaividyaBigDesign', !settings.suddiVaividyaBigDesign)}
+                className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
+              >
+                <img
+                  src={settings.suddiVaividyaBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  alt={settings.suddiVaividyaBigDesign ? 'Big Design' : 'Compact Design'}
+                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                />
+              </button>
+              <p className="text-xs text-center mt-2 text-gray-600">
+                {settings.suddiVaividyaBigDesign ? 'Big Design Selected' : 'Compact Design Selected'}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded border border-gray-300">
+              <h3 className="text-md font-medium text-gray-800 mb-3">Rajya Rashtra</h3>
+              <button
+                type="button"
+                onClick={() => handleInputChange('rajyaRashtraBigDesign', !settings.rajyaRashtraBigDesign)}
+                className="w-full transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black rounded"
+              >
+                <img
+                  src={settings.rajyaRashtraBigDesign ? '/categorydesigns/2.png' : '/categorydesigns/1.png'}
+                  alt={settings.rajyaRashtraBigDesign ? 'Big Design' : 'Compact Design'}
+                  className="w-full h-auto rounded shadow-md border-2 border-gray-300"
+                />
+              </button>
+              <p className="text-xs text-center mt-2 text-gray-600">
+                {settings.rajyaRashtraBigDesign ? 'Big Design Selected' : 'Compact Design Selected'}
+              </p>
             </div>
           </div>
         </div>
