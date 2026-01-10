@@ -118,22 +118,13 @@ const AlignNews: React.FC = () => {
     return grouped;
   };
 
-  const getIndicatorConfig = (categoryName: string, index: number, hasImage: boolean) => {
-    const settingKey = categorySettingsMap[categoryName];
-    const isBigDesign = settingKey && settings?.[settingKey];
+  const isBigImagePosition = (index: number, isBigDesign: boolean) => {
+    const position = index + 1;
 
     if (isBigDesign) {
-      if (hasImage) {
-        return { show: true, color: 'bg-blue-500', title: 'Image News - Big Design' };
-      }
-      return { show: false, color: '', title: '' };
+      return position % 2 === 1;
     } else {
-      const position = index + 1;
-      const showIndicator = ((position - 4) % 3 === 0 && position >= 4);
-      if (showIndicator) {
-        return { show: true, color: 'bg-green-500', title: 'Ad position indicator' };
-      }
-      return { show: false, color: '', title: '' };
+      return (position - 1) % 3 === 0;
     }
   };
 
@@ -276,11 +267,9 @@ const AlignNews: React.FC = () => {
 
             <div className="p-4 space-y-2">
               {filteredGroupedNews[categoryName].map((item, index) => {
-                const hasImage = item.image && item.image.length > 0;
-                const indicatorConfig = getIndicatorConfig(categoryName, index, hasImage);
                 const settingKey = categorySettingsMap[categoryName];
                 const isBigDesign = settingKey && settings?.[settingKey];
-                const shouldBeBlue = isBigDesign && (index === 0 || index === 2);
+                const shouldBeBlue = isBigDesign !== undefined && isBigImagePosition(index, isBigDesign);
 
                 return (
                   <div
@@ -303,11 +292,6 @@ const AlignNews: React.FC = () => {
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold text-gray-600">{index + 1}</span>
                     </div>
-                    {indicatorConfig.show && (
-                      <div className="flex items-center justify-center" title={indicatorConfig.title}>
-                        <div className={`w-3 h-3 ${indicatorConfig.color} rounded-full animate-pulse`}></div>
-                      </div>
-                    )}
                   </div>
 
                   {item.image && item.image.length > 0 && (
