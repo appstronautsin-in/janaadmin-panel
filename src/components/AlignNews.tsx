@@ -262,36 +262,6 @@ const AlignNews: React.FC = () => {
           </select>
         </div>
 
-        {settings && (
-          <div className="flex-1 max-w-2xl">
-            <div className="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 className="text-xs font-semibold text-gray-600 mb-2">Category Design Settings (Click to Toggle)</h3>
-              <div className="grid grid-cols-5 gap-2">
-                {Object.entries(categorySettingsMap).map(([categoryName, settingKey]) => {
-                  const isEnabled = settings[settingKey];
-                  return (
-                    <button
-                      key={categoryName}
-                      onClick={() => toggleCategoryDesign(settingKey)}
-                      className={`px-2 py-1.5 rounded text-xs font-medium text-center transition-all hover:scale-105 hover:shadow-md ${
-                        isEnabled
-                          ? 'bg-green-100 text-green-700 border-2 border-green-400 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-600 border-2 border-gray-300 hover:bg-gray-200'
-                      }`}
-                      title={`${categoryName}: ${isEnabled ? 'Big Design (Odd positions)' : 'Normal Design (1,4,7... positions)'}\nClick to toggle`}
-                    >
-                      <div className="truncate">{categoryName}</div>
-                      <div className="text-[10px] mt-0.5 font-semibold">
-                        {isEnabled ? '✓ Big' : 'Normal'}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
         <button
           onClick={handleRefresh}
           disabled={refreshing}
@@ -301,6 +271,57 @@ const AlignNews: React.FC = () => {
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
+
+      {selectedCategory !== 'all' && categorySettingsMap[selectedCategory] && settings && (
+        <div className="mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Category Design for: {selectedCategory}
+            </h3>
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => toggleCategoryDesign(categorySettingsMap[selectedCategory])}
+                className={`flex items-center gap-3 px-6 py-3 rounded-lg border-2 transition-all hover:shadow-md ${
+                  settings[categorySettingsMap[selectedCategory]]
+                    ? 'bg-blue-50 border-blue-500'
+                    : 'bg-white border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <img src="/categorydesigns/1.png" alt="Big Design" className="w-12 h-12 object-contain" />
+                <div className="text-left">
+                  <div className="font-semibold text-gray-800">Big Design</div>
+                  <div className="text-xs text-gray-600">Odd positions (1,3,5...)</div>
+                </div>
+                {settings[categorySettingsMap[selectedCategory]] && (
+                  <div className="ml-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    ✓
+                  </div>
+                )}
+              </button>
+
+              <button
+                onClick={() => toggleCategoryDesign(categorySettingsMap[selectedCategory])}
+                className={`flex items-center gap-3 px-6 py-3 rounded-lg border-2 transition-all hover:shadow-md ${
+                  !settings[categorySettingsMap[selectedCategory]]
+                    ? 'bg-blue-50 border-blue-500'
+                    : 'bg-white border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <img src="/categorydesigns/2.png" alt="Compact Design" className="w-12 h-12 object-contain" />
+                <div className="text-left">
+                  <div className="font-semibold text-gray-800">Compact Design</div>
+                  <div className="text-xs text-gray-600">Positions 1,4,7...</div>
+                </div>
+                {!settings[categorySettingsMap[selectedCategory]] && (
+                  <div className="ml-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    ✓
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {updating && (
         <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50">
