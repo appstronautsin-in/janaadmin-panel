@@ -30,6 +30,14 @@ interface GroupedNews {
   [categoryName: string]: NewsItem[];
 }
 
+interface Settings {
+  suddiBigDesign?: boolean;
+  antharashtriyaBigDesign?: boolean;
+  rajakiyaBigDesign?: boolean;
+  suddiVaividyaBigDesign?: boolean;
+  rajyaRashtraBigDesign?: boolean;
+}
+
 const AlignNews: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +46,19 @@ const AlignNews: React.FC = () => {
   const [draggedItem, setDraggedItem] = useState<NewsItem | null>(null);
   const [draggedOverCategory, setDraggedOverCategory] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [settings, setSettings] = useState<Settings | null>(null);
+
+  const categorySettingsMap: { [key: string]: keyof Settings } = {
+    'ಸುದ್ದಿಗಳು': 'suddiBigDesign',
+    'ಅಂತಾರಾಷ್ಟ್ರೀಯ': 'antharashtriyaBigDesign',
+    'ರಾಜಕೀಯ': 'rajakiyaBigDesign',
+    'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividyaBigDesign',
+    'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraBigDesign',
+  };
 
   useEffect(() => {
     fetchNews();
+    fetchSettings();
   }, []);
 
   const fetchNews = async () => {
@@ -52,6 +70,21 @@ const AlignNews: React.FC = () => {
       console.error('Error fetching news:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const response = await api.get('/v1/app/settings');
+      setSettings({
+        suddiBigDesign: response.data.suddiBigDesign,
+        antharashtriyaBigDesign: response.data.antharashtriyaBigDesign,
+        rajakiyaBigDesign: response.data.rajakiyaBigDesign,
+        suddiVaividyaBigDesign: response.data.suddiVaividyaBigDesign,
+        rajyaRashtraBigDesign: response.data.rajyaRashtraBigDesign,
+      });
+    } catch (error) {
+      console.error('Error fetching settings:', error);
     }
   };
 
@@ -83,6 +116,25 @@ const AlignNews: React.FC = () => {
     });
 
     return grouped;
+  };
+
+  const getIndicatorConfig = (categoryName: string, index: number, hasImage: boolean) => {
+    const settingKey = categorySettingsMap[categoryName];
+    const isBigDesign = settingKey && settings?.[settingKey];
+
+    if (isBigDesign) {
+      if (hasImage) {
+        return { show: true, color: 'bg-blue-500', title: 'Image News - Big Design' };
+      }
+      return { show: false, color: '', title: '' };
+    } else {
+      const position = index + 1;
+      const showIndicator = ((position - 4) % 3 === 0 && position >= 4);
+      if (showIndicator) {
+        return { show: true, color: 'bg-green-500', title: 'Ad position indicator' };
+      }
+      return { show: false, color: '', title: '' };
+    }
   };
 
   const updateNewsIndex = async (newsId: string, newIndex: number) => {
@@ -243,11 +295,15 @@ const AlignNews: React.FC = () => {
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold text-gray-600">{index + 1}</span>
                     </div>
-                    {((index + 1 - 4) % 3 === 0 && (index + 1) >= 4) && (
-                      <div className="flex items-center justify-center" title="Ad position indicator">
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
+                    {(() => {
+                      const hasImage = item.image && item.image.length > 0;
+                      const indicatorConfig = getIndicatorConfig(categoryName, index, hasImage);
+                      return indicatorConfig.show && (
+                        <div className="flex items-center justify-center" title={indicatorConfig.title}>
+                          <div className={`w-3 h-3 ${indicatorConfig.color} rounded-full animate-pulse`}></div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {item.image && item.image.length > 0 && (
