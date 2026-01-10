@@ -219,7 +219,7 @@ const AlignNews: React.FC = () => {
         <p className="text-gray-600 mt-1">Drag and drop news items to reorder within each category</p>
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-gray-600" />
@@ -238,10 +238,40 @@ const AlignNews: React.FC = () => {
             ))}
           </select>
         </div>
+
+        {settings && (
+          <div className="flex-1 max-w-2xl">
+            <div className="bg-white border border-gray-200 rounded-lg p-3">
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Category Design Settings</h3>
+              <div className="grid grid-cols-5 gap-2">
+                {Object.entries(categorySettingsMap).map(([categoryName, settingKey]) => {
+                  const isEnabled = settings[settingKey];
+                  return (
+                    <div
+                      key={categoryName}
+                      className={`px-2 py-1.5 rounded text-xs font-medium text-center transition-colors ${
+                        isEnabled
+                          ? 'bg-green-100 text-green-700 border border-green-300'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                      }`}
+                      title={`${categoryName}: ${isEnabled ? 'Big Design (Odd positions)' : 'Normal Design (1,4,7... positions)'}`}
+                    >
+                      <div className="truncate">{categoryName}</div>
+                      <div className="text-[10px] mt-0.5">
+                        {isEnabled ? 'Big' : 'Normal'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+          className="flex items-center gap-2 px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg flex-shrink-0"
         >
           <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh'}
