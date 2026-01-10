@@ -92,16 +92,22 @@ const AlignNews: React.FC = () => {
     if (!settings) return;
 
     const newValue = !settings[settingKey];
+    const oldSettings = { ...settings };
 
     try {
       setSettings({ ...settings, [settingKey]: newValue });
 
-      await api.put('/v1/app/settings', {
+      const response = await api.put('/v1/app/settings', {
         [settingKey]: newValue,
       });
-    } catch (error) {
+
+      if (response.data && response.data[settingKey] !== undefined) {
+        setSettings({ ...settings, [settingKey]: response.data[settingKey] });
+      }
+    } catch (error: any) {
       console.error('Error updating setting:', error);
-      setSettings({ ...settings, [settingKey]: !newValue });
+      alert(`Failed to update setting: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+      setSettings(oldSettings);
     }
   };
 
