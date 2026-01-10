@@ -88,6 +88,23 @@ const AlignNews: React.FC = () => {
     }
   };
 
+  const toggleCategoryDesign = async (settingKey: keyof Settings) => {
+    if (!settings) return;
+
+    const newValue = !settings[settingKey];
+
+    try {
+      setSettings({ ...settings, [settingKey]: newValue });
+
+      await api.put('/v1/app/settings', {
+        [settingKey]: newValue,
+      });
+    } catch (error) {
+      console.error('Error updating setting:', error);
+      setSettings({ ...settings, [settingKey]: !newValue });
+    }
+  };
+
   const handleRefresh = async () => {
     try {
       setRefreshing(true);
@@ -242,25 +259,26 @@ const AlignNews: React.FC = () => {
         {settings && (
           <div className="flex-1 max-w-2xl">
             <div className="bg-white border border-gray-200 rounded-lg p-3">
-              <h3 className="text-xs font-semibold text-gray-600 mb-2">Category Design Settings</h3>
+              <h3 className="text-xs font-semibold text-gray-600 mb-2">Category Design Settings (Click to Toggle)</h3>
               <div className="grid grid-cols-5 gap-2">
                 {Object.entries(categorySettingsMap).map(([categoryName, settingKey]) => {
                   const isEnabled = settings[settingKey];
                   return (
-                    <div
+                    <button
                       key={categoryName}
-                      className={`px-2 py-1.5 rounded text-xs font-medium text-center transition-colors ${
+                      onClick={() => toggleCategoryDesign(settingKey)}
+                      className={`px-2 py-1.5 rounded text-xs font-medium text-center transition-all hover:scale-105 hover:shadow-md ${
                         isEnabled
-                          ? 'bg-green-100 text-green-700 border border-green-300'
-                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                          ? 'bg-green-100 text-green-700 border-2 border-green-400 hover:bg-green-200'
+                          : 'bg-gray-100 text-gray-600 border-2 border-gray-300 hover:bg-gray-200'
                       }`}
-                      title={`${categoryName}: ${isEnabled ? 'Big Design (Odd positions)' : 'Normal Design (1,4,7... positions)'}`}
+                      title={`${categoryName}: ${isEnabled ? 'Big Design (Odd positions)' : 'Normal Design (1,4,7... positions)'}\nClick to toggle`}
                     >
                       <div className="truncate">{categoryName}</div>
-                      <div className="text-[10px] mt-0.5">
-                        {isEnabled ? 'Big' : 'Normal'}
+                      <div className="text-[10px] mt-0.5 font-semibold">
+                        {isEnabled ? '✓ Big' : 'Normal'}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
