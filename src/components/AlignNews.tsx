@@ -287,9 +287,9 @@ const AlignNews: React.FC = () => {
                     : 'bg-white border-gray-300 hover:border-gray-400'
                 }`}
               >
-                <img src="/categorydesigns/1.png" alt="Big Design" className="w-12 h-12 object-contain" />
+                <img src="/categorydesigns/1.png" alt="Modern Design" className="w-12 h-12 object-contain" />
                 <div className="text-left">
-                  <div className="font-semibold text-gray-800">Big Design</div>
+                  <div className="font-semibold text-gray-800">Modern Design</div>
                   <div className="text-xs text-gray-600">Odd positions (1,3,5...)</div>
                 </div>
                 {settings[categorySettingsMap[selectedCategory]] && (
@@ -307,9 +307,9 @@ const AlignNews: React.FC = () => {
                     : 'bg-white border-gray-300 hover:border-gray-400'
                 }`}
               >
-                <img src="/categorydesigns/2.png" alt="Compact Design" className="w-12 h-12 object-contain" />
+                <img src="/categorydesigns/2.png" alt="Default Design" className="w-12 h-12 object-contain" />
                 <div className="text-left">
-                  <div className="font-semibold text-gray-800">Compact Design</div>
+                  <div className="font-semibold text-gray-800">Default Design</div>
                   <div className="text-xs text-gray-600">Positions 1,4,7...</div>
                 </div>
                 {!settings[categorySettingsMap[selectedCategory]] && (
