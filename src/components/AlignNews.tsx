@@ -31,6 +31,7 @@ interface GroupedNews {
 }
 
 interface Settings {
+  _id?: string;
   suddiBigDesign?: boolean;
   antharashtriyaBigDesign?: boolean;
   rajakiyaBigDesign?: boolean;
@@ -77,6 +78,7 @@ const AlignNews: React.FC = () => {
     try {
       const response = await api.get('/v1/app/settings');
       setSettings({
+        _id: response.data._id,
         suddiBigDesign: response.data.suddiBigDesign,
         antharashtriyaBigDesign: response.data.antharashtriyaBigDesign,
         rajakiyaBigDesign: response.data.rajakiyaBigDesign,
@@ -89,7 +91,7 @@ const AlignNews: React.FC = () => {
   };
 
   const toggleCategoryDesign = async (settingKey: keyof Settings) => {
-    if (!settings) return;
+    if (!settings || !settings._id) return;
 
     const newValue = !settings[settingKey];
     const oldSettings = { ...settings };
@@ -97,7 +99,7 @@ const AlignNews: React.FC = () => {
     try {
       setSettings({ ...settings, [settingKey]: newValue });
 
-      const response = await api.put('/v1/app/settings', {
+      const response = await api.put(`/v1/app/settings/${settings._id}`, {
         [settingKey]: newValue,
       });
 
