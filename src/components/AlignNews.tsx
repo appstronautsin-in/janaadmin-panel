@@ -278,7 +278,9 @@ const AlignNews: React.FC = () => {
               {filteredGroupedNews[categoryName].map((item, index) => {
                 const hasImage = item.image && item.image.length > 0;
                 const indicatorConfig = getIndicatorConfig(categoryName, index, hasImage);
-                const isImageNews = indicatorConfig.show && indicatorConfig.color === 'bg-blue-500';
+                const settingKey = categorySettingsMap[categoryName];
+                const isBigDesign = settingKey && settings?.[settingKey];
+                const shouldBeBlue = isBigDesign && (index === 0 || index === 2);
 
                 return (
                   <div
@@ -291,7 +293,7 @@ const AlignNews: React.FC = () => {
                     className={`
                       flex items-center gap-4 p-4 border rounded-lg cursor-move
                       transition-all duration-200 hover:shadow-md hover:border-gray-400
-                      ${isImageNews ? 'bg-blue-50' : 'bg-white'}
+                      ${shouldBeBlue ? 'bg-blue-50' : 'bg-white'}
                       ${draggedItem?._id === item._id ? 'opacity-50' : ''}
                       ${draggedOverCategory === categoryName && draggedItem?._id !== item._id ? 'border-blue-400' : 'border-gray-200'}
                     `}
