@@ -275,35 +275,37 @@ const AlignNews: React.FC = () => {
             </div>
 
             <div className="p-4 space-y-2">
-              {filteredGroupedNews[categoryName].map((item, index) => (
-                <div
-                  key={item._id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, item)}
-                  onDragOver={handleDragOver}
-                  onDragEnter={() => handleDragEnter(categoryName)}
-                  onDrop={(e) => handleDrop(e, item, categoryName)}
-                  className={`
-                    flex items-center gap-4 p-4 bg-white border rounded-lg cursor-move
-                    transition-all duration-200 hover:shadow-md hover:border-gray-400
-                    ${draggedItem?._id === item._id ? 'opacity-50' : ''}
-                    ${draggedOverCategory === categoryName && draggedItem?._id !== item._id ? 'border-blue-400' : 'border-gray-200'}
-                  `}
-                >
+              {filteredGroupedNews[categoryName].map((item, index) => {
+                const hasImage = item.image && item.image.length > 0;
+                const indicatorConfig = getIndicatorConfig(categoryName, index, hasImage);
+                const isImageNews = indicatorConfig.show && indicatorConfig.color === 'bg-blue-500';
+
+                return (
+                  <div
+                    key={item._id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onDragOver={handleDragOver}
+                    onDragEnter={() => handleDragEnter(categoryName)}
+                    onDrop={(e) => handleDrop(e, item, categoryName)}
+                    className={`
+                      flex items-center gap-4 p-4 border rounded-lg cursor-move
+                      transition-all duration-200 hover:shadow-md hover:border-gray-400
+                      ${isImageNews ? 'bg-blue-50' : 'bg-white'}
+                      ${draggedItem?._id === item._id ? 'opacity-50' : ''}
+                      ${draggedOverCategory === categoryName && draggedItem?._id !== item._id ? 'border-blue-400' : 'border-gray-200'}
+                    `}
+                  >
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <GripVertical className="h-5 w-5 text-gray-400" />
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold text-gray-600">{index + 1}</span>
                     </div>
-                    {(() => {
-                      const hasImage = item.image && item.image.length > 0;
-                      const indicatorConfig = getIndicatorConfig(categoryName, index, hasImage);
-                      return indicatorConfig.show && (
-                        <div className="flex items-center justify-center" title={indicatorConfig.title}>
-                          <div className={`w-3 h-3 ${indicatorConfig.color} rounded-full animate-pulse`}></div>
-                        </div>
-                      );
-                    })()}
+                    {indicatorConfig.show && (
+                      <div className="flex items-center justify-center" title={indicatorConfig.title}>
+                        <div className={`w-3 h-3 ${indicatorConfig.color} rounded-full animate-pulse`}></div>
+                      </div>
+                    )}
                   </div>
 
                   {item.image && item.image.length > 0 && (
@@ -332,7 +334,8 @@ const AlignNews: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
