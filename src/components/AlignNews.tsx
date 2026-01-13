@@ -70,7 +70,7 @@ const AlignNews: React.FC = () => {
     'ಸುದ್ದಿಗಳು': 'suddiMaxCount',
     'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividhyaMaxCount',
     'ಅಂತಾರಾಷ್ಟ್ರೀಯ': 'antharashtriyaMaxCount',
-    'ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ': 'chitradallisuddiMaxCount',
+    'ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ': 'chitradalliSuddiMaxCount',
     'ಲೇಖನ / ಕವನ': 'lekhanaMaxCount',
     'ಓದುಗರ ಪತ್ರ': 'odhugaraPatraMaxCount',
     'ರಾಜಕೀಯ': 'rajakiyaMaxCount',
