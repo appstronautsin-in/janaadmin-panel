@@ -11,7 +11,15 @@ const DashboardHeader: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const sessionStartTimeStr = sessionManager.getSessionStartTime();
+    let sessionStartTimeStr = sessionManager.getSessionStartTime();
+
+    if (!sessionStartTimeStr) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        sessionStartTimeStr = new Date().toISOString();
+        localStorage.setItem('sessionStartTime', sessionStartTimeStr);
+      }
+    }
 
     if (sessionStartTimeStr) {
       setSessionStartTime(sessionStartTimeStr);
