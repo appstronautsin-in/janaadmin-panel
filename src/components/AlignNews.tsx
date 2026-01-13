@@ -37,6 +37,15 @@ interface Settings {
   rajakiyaBigDesign?: boolean;
   suddiVaividyaBigDesign?: boolean;
   rajyaRashtraBigDesign?: boolean;
+  suddiMaxCount?: number;
+  suddiVaividyaMaxCount?: number;
+  antharashtriyaMaxCount?: number;
+  chitradallisuddiMaxCount?: number;
+  lekhanaMaxCount?: number;
+  odhugaraPatraMaxCount?: number;
+  rajakiyaMaxCount?: number;
+  rajyaRashtraMaxCount?: number;
+  sankshipthahMaxCount?: number;
 }
 
 const AlignNews: React.FC = () => {
@@ -55,6 +64,18 @@ const AlignNews: React.FC = () => {
     'ರಾಜಕೀಯ': 'rajakiyaBigDesign',
     'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividyaBigDesign',
     'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraBigDesign',
+  };
+
+  const categoryMaxCountMap: { [key: string]: keyof Settings } = {
+    'ಸುದ್ದಿಗಳು': 'suddiMaxCount',
+    'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividyaMaxCount',
+    'ಅಂತಾರಾಷ್ಟ್ರೀಯ': 'antharashtriyaMaxCount',
+    'ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ': 'chitradallisuddiMaxCount',
+    'ಲೇಖನ': 'lekhanaMaxCount',
+    'ಓದುಗರ ಪತ್ರ': 'odhugaraPatraMaxCount',
+    'ರಾಜಕೀಯ': 'rajakiyaMaxCount',
+    'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraMaxCount',
+    'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthahMaxCount',
   };
 
   useEffect(() => {
@@ -84,6 +105,15 @@ const AlignNews: React.FC = () => {
         rajakiyaBigDesign: response.data.rajakiyaBigDesign,
         suddiVaividyaBigDesign: response.data.suddiVaividyaBigDesign,
         rajyaRashtraBigDesign: response.data.rajyaRashtraBigDesign,
+        suddiMaxCount: response.data.suddiMaxCount,
+        suddiVaividyaMaxCount: response.data.suddiVaividyaMaxCount,
+        antharashtriyaMaxCount: response.data.antharashtriyaMaxCount,
+        chitradallisuddiMaxCount: response.data.chitradallisuddiMaxCount,
+        lekhanaMaxCount: response.data.lekhanaMaxCount,
+        odhugaraPatraMaxCount: response.data.odhugaraPatraMaxCount,
+        rajakiyaMaxCount: response.data.rajakiyaMaxCount,
+        rajyaRashtraMaxCount: response.data.rajyaRashtraMaxCount,
+        sankshipthahMaxCount: response.data.sankshipthahMaxCount,
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -138,6 +168,12 @@ const AlignNews: React.FC = () => {
 
     Object.keys(grouped).forEach((categoryName) => {
       grouped[categoryName].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+
+      const maxCountKey = categoryMaxCountMap[categoryName];
+      if (maxCountKey && settings && settings[maxCountKey]) {
+        const maxCount = settings[maxCountKey] as number;
+        grouped[categoryName] = grouped[categoryName].slice(0, maxCount);
+      }
     });
 
     return grouped;
@@ -339,6 +375,11 @@ const AlignNews: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-800">{categoryName}</h2>
               <p className="text-sm text-gray-500 mt-1">
                 {filteredGroupedNews[categoryName].length} {filteredGroupedNews[categoryName].length === 1 ? 'item' : 'items'}
+                {categoryMaxCountMap[categoryName] && settings && settings[categoryMaxCountMap[categoryName]] && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                    Max: {settings[categoryMaxCountMap[categoryName]]}
+                  </span>
+                )}
               </p>
             </div>
 
