@@ -37,14 +37,23 @@ interface Settings {
   rajakiyaBigDesign?: boolean;
   suddiVaividyaBigDesign?: boolean;
   rajyaRashtraBigDesign?: boolean;
+  suddiMinCount?: number;
   suddiMaxCount?: number;
+  suddiVaividhyaMinCount?: number;
   suddiVaividhyaMaxCount?: number;
+  antharashtriyaMinCount?: number;
   antharashtriyaMaxCount?: number;
+  chitradalliSuddiMinCount?: number;
   chitradalliSuddiMaxCount?: number;
+  lekhanaMinCount?: number;
   lekhanaMaxCount?: number;
+  odhugaraPatraMinCount?: number;
   odhugaraPatraMaxCount?: number;
+  rajakiyaMinCount?: number;
   rajakiyaMaxCount?: number;
+  rajyaRashtraMinCount?: number;
   rajyaRashtraMaxCount?: number;
+  sankshipthaMinCount?: number;
   sankshipthaMaxCount?: number;
 }
 
@@ -76,7 +85,18 @@ const AlignNews: React.FC = () => {
     'ರಾಜಕೀಯ': 'rajakiyaMaxCount',
     'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraMaxCount',
     'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthaMaxCount',
+  };
 
+  const categoryMinCountMap: { [key: string]: keyof Settings } = {
+    'ಸುದ್ದಿಗಳು': 'suddiMinCount',
+    'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividhyaMinCount',
+    'ಅಂತಾರಾಷ್ಟ್ರೀಯ': 'antharashtriyaMinCount',
+    'ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ': 'chitradalliSuddiMinCount',
+    'ಲೇಖನ / ಕವನ': 'lekhanaMinCount',
+    'ಓದುಗರ ಪತ್ರ': 'odhugaraPatraMinCount',
+    'ರಾಜಕೀಯ': 'rajakiyaMinCount',
+    'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraMinCount',
+    'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthaMinCount',
   };
 
   useEffect(() => {
@@ -106,14 +126,23 @@ const AlignNews: React.FC = () => {
         rajakiyaBigDesign: response.data.rajakiyaBigDesign,
         suddiVaividyaBigDesign: response.data.suddiVaividyaBigDesign,
         rajyaRashtraBigDesign: response.data.rajyaRashtraBigDesign,
+        suddiMinCount: response.data.suddiMinCount,
         suddiMaxCount: response.data.suddiMaxCount,
+        suddiVaividhyaMinCount: response.data.suddiVaividhyaMinCount,
         suddiVaividhyaMaxCount: response.data.suddiVaividhyaMaxCount,
+        antharashtriyaMinCount: response.data.antharashtriyaMinCount,
         antharashtriyaMaxCount: response.data.antharashtriyaMaxCount,
+        chitradalliSuddiMinCount: response.data.chitradalliSuddiMinCount,
         chitradalliSuddiMaxCount: response.data.chitradalliSuddiMaxCount,
+        lekhanaMinCount: response.data.lekhanaMinCount,
         lekhanaMaxCount: response.data.lekhanaMaxCount,
+        odhugaraPatraMinCount: response.data.odhugaraPatraMinCount,
         odhugaraPatraMaxCount: response.data.odhugaraPatraMaxCount,
+        rajakiyaMinCount: response.data.rajakiyaMinCount,
         rajakiyaMaxCount: response.data.rajakiyaMaxCount,
+        rajyaRashtraMinCount: response.data.rajyaRashtraMinCount,
         rajyaRashtraMaxCount: response.data.rajyaRashtraMaxCount,
+        sankshipthaMinCount: response.data.sankshipthaMinCount,
         sankshipthaMaxCount: response.data.sankshipthaMaxCount,
       });
     } catch (error) {
@@ -376,7 +405,12 @@ const AlignNews: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-800">{categoryName}</h2>
               <p className="text-sm text-gray-500 mt-1">
                 {filteredGroupedNews[categoryName].length} {filteredGroupedNews[categoryName].length === 1 ? 'item' : 'items'}
-                {categoryMaxCountMap[categoryName] && settings && settings[categoryMaxCountMap[categoryName]] && (
+                {categoryMinCountMap[categoryName] && settings && settings[categoryMinCountMap[categoryName]] !== undefined && (
+                  <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                    Min: {settings[categoryMinCountMap[categoryName]]}
+                  </span>
+                )}
+                {categoryMaxCountMap[categoryName] && settings && settings[categoryMaxCountMap[categoryName]] !== undefined && (
                   <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                     Max: {settings[categoryMaxCountMap[categoryName]]}
                   </span>
