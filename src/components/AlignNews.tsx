@@ -45,7 +45,7 @@ interface Settings {
   odhugaraPatraMaxCount?: number;
   rajakiyaMaxCount?: number;
   rajyaRashtraMaxCount?: number;
-  sankshipthahMaxCount?: number;
+  sankshipthaMaxCount?: number;
 }
 
 const AlignNews: React.FC = () => {
@@ -75,7 +75,7 @@ const AlignNews: React.FC = () => {
     'ಓದುಗರ ಪತ್ರ': 'odhugaraPatraMaxCount',
     'ರಾಜಕೀಯ': 'rajakiyaMaxCount',
     'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraMaxCount',
-    'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthahMaxCount',
+    'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthaMaxCount',
 
   };
 
@@ -99,8 +99,6 @@ const AlignNews: React.FC = () => {
   const fetchSettings = async () => {
     try {
       const response = await api.get('/v1/app/settings');
-      console.log('Settings from API:', response.data);
-      console.log('sankshipthahMaxCount value:', response.data.sankshipthahMaxCount);
       setSettings({
         _id: response.data._id,
         suddiBigDesign: response.data.suddiBigDesign,
@@ -116,7 +114,7 @@ const AlignNews: React.FC = () => {
         odhugaraPatraMaxCount: response.data.odhugaraPatraMaxCount,
         rajakiyaMaxCount: response.data.rajakiyaMaxCount,
         rajyaRashtraMaxCount: response.data.rajyaRashtraMaxCount,
-        sankshipthahMaxCount: response.data.sankshipthahMaxCount,
+        sankshipthaMaxCount: response.data.sankshipthaMaxCount,
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -175,11 +173,7 @@ const AlignNews: React.FC = () => {
       const maxCountKey = categoryMaxCountMap[categoryName];
       if (maxCountKey && settings && settings[maxCountKey]) {
         const maxCount = settings[maxCountKey] as number;
-        console.log(`Category: ${categoryName}, MaxCountKey: ${maxCountKey}, MaxCount: ${maxCount}, Before slice: ${grouped[categoryName].length}`);
         grouped[categoryName] = grouped[categoryName].slice(0, maxCount);
-        console.log(`After slice: ${grouped[categoryName].length}`);
-      } else {
-        console.log(`Category: ${categoryName}, MaxCountKey: ${maxCountKey}, Settings:`, settings, `Value:`, settings?.[maxCountKey]);
       }
     });
 
