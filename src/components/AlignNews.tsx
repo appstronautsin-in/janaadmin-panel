@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../config/axios';
 import { IMAGE_BASE_URL } from '../config/constants';
-import { GripVertical, Loader2, Filter, ImageIcon, RefreshCw } from 'lucide-react';
+import { GripVertical, Loader2, Filter, ImageIcon, RefreshCw, Settings } from 'lucide-react';
 
 interface Author {
   _id: string;
@@ -66,6 +66,9 @@ const AlignNews: React.FC = () => {
   const [draggedOverCategory, setDraggedOverCategory] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [showCountModal, setShowCountModal] = useState(false);
+  const [countFormData, setCountFormData] = useState<Settings>({});
+  const [savingCounts, setSavingCounts] = useState(false);
 
   const categorySettingsMap: { [key: string]: keyof Settings } = {
     'ಸುದ್ದಿಗಳು': 'suddiBigDesign',
@@ -182,6 +185,46 @@ const AlignNews: React.FC = () => {
       console.error('Error refreshing news:', error);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleOpenCountModal = () => {
+    if (settings) {
+      setCountFormData({ ...settings });
+    }
+    setShowCountModal(true);
+  };
+
+  const handleCloseCountModal = () => {
+    setShowCountModal(false);
+    setCountFormData({});
+  };
+
+  const handleCountInputChange = (field: keyof Settings, value: number) => {
+    setCountFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveCounts = async () => {
+    if (!settings || !settings._id) return;
+
+    try {
+      setSavingCounts(true);
+      const response = await api.put(`/v1/app/settings/${settings._id}`, countFormData);
+
+      if (response.data) {
+        setSettings(response.data);
+        alert('News counts updated successfully!');
+        handleCloseCountModal();
+        await fetchNews();
+      }
+    } catch (error: any) {
+      console.error('Error updating counts:', error);
+      alert(`Failed to update counts: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+    } finally {
+      setSavingCounts(false);
     }
   };
 
@@ -330,14 +373,23 @@ const AlignNews: React.FC = () => {
           </select>
         </div>
 
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg flex-shrink-0"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleOpenCountModal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors rounded-lg flex-shrink-0"
+          >
+            <Settings className="h-4 w-4" />
+            News Count Settings
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg flex-shrink-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {selectedCategory !== 'all' && categorySettingsMap[selectedCategory] && settings && (
@@ -483,6 +535,280 @@ const AlignNews: React.FC = () => {
       {Object.keys(filteredGroupedNews).length === 0 && (
         <div className="text-center py-12 text-gray-500">
           <p>No news items found {selectedCategory !== 'all' && `in category "${selectedCategory}"`}</p>
+        </div>
+      )}
+
+      {showCountModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800">News Count Settings</h2>
+              <button
+                onClick={handleCloseCountModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಸುದ್ದಿಗಳು (News)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.suddiMinCount || 0}
+                        onChange={(e) => handleCountInputChange('suddiMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.suddiMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('suddiMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಸುದ್ದಿ ವೈವಿಧ್ಯ (News Variety)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.suddiVaividhyaMinCount || 0}
+                        onChange={(e) => handleCountInputChange('suddiVaividhyaMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.suddiVaividhyaMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('suddiVaividhyaMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಅಂತಾರಾಷ್ಟ್ರೀಯ (International)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.antharashtriyaMinCount || 0}
+                        onChange={(e) => handleCountInputChange('antharashtriyaMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.antharashtriyaMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('antharashtriyaMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ (News in Pictures)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.chitradalliSuddiMinCount || 0}
+                        onChange={(e) => handleCountInputChange('chitradalliSuddiMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.chitradalliSuddiMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('chitradalliSuddiMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಲೇಖನ / ಕವನ (Article / Poem)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.lekhanaMinCount || 0}
+                        onChange={(e) => handleCountInputChange('lekhanaMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.lekhanaMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('lekhanaMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಓದುಗರ ಪತ್ರ (Readers Letter)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.odhugaraPatraMinCount || 0}
+                        onChange={(e) => handleCountInputChange('odhugaraPatraMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.odhugaraPatraMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('odhugaraPatraMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ರಾಜಕೀಯ (Politics)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.rajakiyaMinCount || 0}
+                        onChange={(e) => handleCountInputChange('rajakiyaMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.rajakiyaMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('rajakiyaMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ರಾಜ್ಯ / ರಾಷ್ಟ್ರ (State / Nation)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.rajyaRashtraMinCount || 0}
+                        onChange={(e) => handleCountInputChange('rajyaRashtraMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.rajyaRashtraMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('rajyaRashtraMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">ಸಂಕ್ಷಿಪ್ತ (Brief)</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Min Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.sankshipthaMinCount || 0}
+                        onChange={(e) => handleCountInputChange('sankshipthaMinCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={countFormData.sankshipthaMaxCount || 0}
+                        onChange={(e) => handleCountInputChange('sankshipthaMaxCount', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+              <button
+                onClick={handleCloseCountModal}
+                disabled={savingCounts}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveCounts}
+                disabled={savingCounts}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {savingCounts && <Loader2 className="h-4 w-4 animate-spin" />}
+                {savingCounts ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
