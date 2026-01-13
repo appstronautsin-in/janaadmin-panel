@@ -75,7 +75,7 @@ const AlignNews: React.FC = () => {
     'ಓದುಗರ ಪತ್ರ': 'odhugaraPatraMaxCount',
     'ರಾಜಕೀಯ': 'rajakiyaMaxCount',
     'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraMaxCount',
-    'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthahMaxCount',
+    'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthaMaxCount',
    
   };
 
