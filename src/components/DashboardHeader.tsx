@@ -1,25 +1,128 @@
-import React from 'react';
-import { Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, User, LogIn, Timer } from 'lucide-react';
 import { useTimeFormat } from '../contexts/TimeFormatContext';
+import { useAdminProfile } from '../hooks/useAdminProfile';
+import { sessionManager } from '../utils/sessionManager';
 
 const DashboardHeader: React.FC = () => {
   const { timeFormat, setTimeFormat } = useTimeFormat();
+  const { profile, loading } = useAdminProfile();
+  const [loginTime, setLoginTime] = useState<string>('');
+  const [sessionStartTime, setSessionStartTime] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const loginTimeStr = localStorage.getItem('loginTime');
+    const sessionStartTimeStr = sessionManager.getSessionStartTime();
+
+    if (loginTimeStr) {
+      setLoginTime(loginTimeStr);
+    }
+    if (sessionStartTimeStr) {
+      setSessionStartTime(sessionStartTimeStr);
+    }
+
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleTimeFormat = () => {
     setTimeFormat(timeFormat === '12' ? '24' : '12');
   };
 
+  const calculateDuration = (startTime: string) => {
+    if (!startTime) return '';
+    const start = new Date(startTime);
+    const now = currentTime;
+    const diff = now.getTime() - start.getTime();
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
+  const formatTime = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    if (timeFormat === '12') {
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      return `${hours}:${minutes} ${ampm}`;
+    } else {
+      return `${String(hours).padStart(2, '0')}:${minutes}`;
+    }
+  };
+
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-end">
-      <div className="flex items-center gap-2">
-        <Clock className="h-4 w-4 text-gray-600" />
-        <span className="text-sm text-gray-600">Time Format:</span>
-        <button
-          onClick={toggleTimeFormat}
-          className="px-3 py-1.5 border border-black text-sm font-medium hover:bg-gray-50 transition-colors"
-        >
-          {timeFormat === '12' ? '12 Hour' : '24 Hour'}
-        </button>
+    <div className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-gray-400 animate-pulse" />
+              <span className="text-sm text-gray-400">Loading...</span>
+            </div>
+          ) : profile ? (
+            <>
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-gray-700" />
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">{profile.fullname}</div>
+                  <div className="text-xs text-gray-500">{profile.position} · {profile.role}</div>
+                </div>
+              </div>
+
+              {loginTime && (
+                <div className="flex items-center gap-2 border-l border-gray-200 pl-6">
+                  <LogIn className="h-4 w-4 text-gray-600" />
+                  <div>
+                    <div className="text-xs text-gray-500">Logged in</div>
+                    <div className="text-sm font-medium text-gray-700">
+                      {formatTime(loginTime)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {sessionStartTime && (
+                <div className="flex items-center gap-2 border-l border-gray-200 pl-6">
+                  <Timer className="h-4 w-4 text-gray-600" />
+                  <div>
+                    <div className="text-xs text-gray-500">Session duration</div>
+                    <div className="text-sm font-medium text-gray-700">
+                      {calculateDuration(sessionStartTime)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-gray-600" />
+          <span className="text-sm text-gray-600">Time Format:</span>
+          <button
+            onClick={toggleTimeFormat}
+            className="px-3 py-1.5 border border-black text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            {timeFormat === '12' ? '12 Hour' : '24 Hour'}
+          </button>
+        </div>
       </div>
     </div>
   );

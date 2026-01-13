@@ -105,6 +105,7 @@ const Dashboard = () => {
 
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('loginTime');
     sessionManager.clearSession();
 
     navigate('/');

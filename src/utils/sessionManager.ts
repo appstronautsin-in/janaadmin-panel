@@ -161,6 +161,7 @@ class SessionManager {
 
       if (this.sessionId) {
         Cookies.set('sessionId', this.sessionId, { expires: 7, secure: true, sameSite: 'strict' });
+        localStorage.setItem('sessionStartTime', new Date().toISOString());
         console.log('[SessionManager] Session ID saved to cookies');
       }
 
@@ -252,7 +253,12 @@ class SessionManager {
   clearSession(): void {
     this.sessionId = null;
     Cookies.remove('sessionId');
+    localStorage.removeItem('sessionStartTime');
     console.log('[SessionManager] Session ID removed from cookies');
+  }
+
+  getSessionStartTime(): string | null {
+    return localStorage.getItem('sessionStartTime');
   }
 }
 

@@ -77,6 +77,7 @@ const Login = () => {
       }
 
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('loginTime', new Date().toISOString());
 
       // Only set userId if it exists in the response
       if (response.data.user && response.data.user._id) {

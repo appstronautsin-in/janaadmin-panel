@@ -48,6 +48,7 @@ const AuthMiddleware = ({ children }: AuthMiddlewareProps) => {
       sessionManager.endSession('token_expired').catch(console.error);
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
+      localStorage.removeItem('loginTime');
       sessionManager.clearSession();
       navigate('/', { replace: true });
     }
@@ -61,6 +62,7 @@ const AuthMiddleware = ({ children }: AuthMiddlewareProps) => {
     }
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('loginTime');
     sessionManager.clearSession();
     setShowSessionExpired(false);
     navigate('/', { replace: true });
