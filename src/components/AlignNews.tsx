@@ -99,6 +99,8 @@ const AlignNews: React.FC = () => {
   const fetchSettings = async () => {
     try {
       const response = await api.get('/v1/app/settings');
+      console.log('Settings from API:', response.data);
+      console.log('sankshipthahMaxCount value:', response.data.sankshipthahMaxCount);
       setSettings({
         _id: response.data._id,
         suddiBigDesign: response.data.suddiBigDesign,
@@ -173,7 +175,11 @@ const AlignNews: React.FC = () => {
       const maxCountKey = categoryMaxCountMap[categoryName];
       if (maxCountKey && settings && settings[maxCountKey]) {
         const maxCount = settings[maxCountKey] as number;
+        console.log(`Category: ${categoryName}, MaxCountKey: ${maxCountKey}, MaxCount: ${maxCount}, Before slice: ${grouped[categoryName].length}`);
         grouped[categoryName] = grouped[categoryName].slice(0, maxCount);
+        console.log(`After slice: ${grouped[categoryName].length}`);
+      } else {
+        console.log(`Category: ${categoryName}, MaxCountKey: ${maxCountKey}, Settings:`, settings, `Value:`, settings?.[maxCountKey]);
       }
     });
 
