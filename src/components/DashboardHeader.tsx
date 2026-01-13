@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, User, LogIn, Timer } from 'lucide-react';
+import { Clock, User } from 'lucide-react';
 import { useTimeFormat } from '../contexts/TimeFormatContext';
 import { useAdminProfile } from '../hooks/useAdminProfile';
 import { sessionManager } from '../utils/sessionManager';
@@ -7,17 +7,12 @@ import { sessionManager } from '../utils/sessionManager';
 const DashboardHeader: React.FC = () => {
   const { timeFormat, setTimeFormat } = useTimeFormat();
   const { profile, loading } = useAdminProfile();
-  const [loginTime, setLoginTime] = useState<string>('');
   const [sessionStartTime, setSessionStartTime] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const loginTimeStr = localStorage.getItem('loginTime');
     const sessionStartTimeStr = sessionManager.getSessionStartTime();
 
-    if (loginTimeStr) {
-      setLoginTime(loginTimeStr);
-    }
     if (sessionStartTimeStr) {
       setSessionStartTime(sessionStartTimeStr);
     }
@@ -80,35 +75,25 @@ const DashboardHeader: React.FC = () => {
             <>
               <div className="flex items-center gap-2">
                 <User className="h-5 w-5 text-gray-700" />
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">{profile.fullname}</div>
-                  <div className="text-xs text-gray-500">{profile.position} · {profile.role}</div>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">{profile.fullname}</div>
+                    <div className="text-xs text-gray-500">{profile.position} · {profile.role}</div>
+                  </div>
+
+                  {sessionStartTime && (
+                    <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                      <Clock className="h-4 w-4 text-gray-600" />
+                      <div>
+                        <div className="text-xs text-gray-500">Session time started:</div>
+                        <div className="text-sm font-medium text-gray-700">
+                          {formatTime(sessionStartTime)} · {calculateDuration(sessionStartTime)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {loginTime && (
-                <div className="flex items-center gap-2 border-l border-gray-200 pl-6">
-                  <LogIn className="h-4 w-4 text-gray-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Logged in</div>
-                    <div className="text-sm font-medium text-gray-700">
-                      {formatTime(loginTime)}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {sessionStartTime && (
-                <div className="flex items-center gap-2 border-l border-gray-200 pl-6">
-                  <Timer className="h-4 w-4 text-gray-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Session duration</div>
-                    <div className="text-sm font-medium text-gray-700">
-                      {calculateDuration(sessionStartTime)}
-                    </div>
-                  </div>
-                </div>
-              )}
             </>
           ) : null}
         </div>
