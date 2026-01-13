@@ -68,11 +68,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   const [categoryLoading, setCategoryLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState<string>('today');
+  const [newsDateFilter, setNewsDateFilter] = useState<string>('today');
   const [epaperDateFilter, setEpaperDateFilter] = useState<string>(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
-  const [newsDateFilter, setNewsDateFilter] = useState<string>(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
@@ -108,11 +105,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
     setLoading(true);
     setCategoryLoading(true);
     try {
-      const url = newsDateFilter ? `/v1/news/forviews?date=${newsDateFilter}` : '/v1/news/forviews';
-      console.log('Fetching news with URL:', url);
-      console.log('Date filter value:', newsDateFilter);
-      const response = await api.get(url);
-      console.log('API Response:', response.data);
+      const response = await api.get('/v1/news/forviews');
       const allNews = response.data;
 
       const uniqueCategories = Array.from(
@@ -126,8 +119,40 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
       setCategories(uniqueCategories);
 
       let filteredNews = allNews;
+
+      if (newsDateFilter !== 'all') {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        filteredNews = filteredNews.filter((news: NewsItem) => {
+          const newsDate = new Date(news.createdAt);
+          const newsDateOnly = new Date(newsDate.getFullYear(), newsDate.getMonth(), newsDate.getDate());
+
+          if (newsDateFilter === 'today') {
+            return newsDateOnly.getTime() === today.getTime();
+          } else if (newsDateFilter === 'yesterday') {
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return newsDateOnly.getTime() === yesterday.getTime();
+          } else if (newsDateFilter === '3days') {
+            const threeDaysAgo = new Date(today);
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            return newsDateOnly >= threeDaysAgo;
+          } else if (newsDateFilter === 'week') {
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return newsDateOnly >= weekAgo;
+          } else if (newsDateFilter === 'month') {
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return newsDateOnly >= monthAgo;
+          }
+          return true;
+        });
+      }
+
       if (selectedCategory !== 'all') {
-        filteredNews = allNews.filter((news: NewsItem) =>
+        filteredNews = filteredNews.filter((news: NewsItem) =>
           news.category?._id === selectedCategory
         );
       }
@@ -401,10 +426,8 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
             setSelectedCategory('all');
             setPhoneSearch('');
             setCustomerSearch('');
-            setDateFilter('today');
+            setNewsDateFilter('today');
             setNewsCurrentPage(1);
-            const today = new Date();
-            setNewsDateFilter(today.toISOString().split('T')[0]);
           }}
           className={`flex-1 px-6 py-3 font-medium transition-colors ${
             activeTab === 'news'
@@ -454,18 +477,22 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
         {activeTab === 'news' && (
           <div className="flex items-center gap-4">
             <Filter className="h-5 w-5 text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">Select Date:</label>
-            <input
-              type="date"
+            <label className="text-sm font-medium text-gray-700">Filter by Date:</label>
+            <select
               value={newsDateFilter}
               onChange={(e) => {
-                console.log('Date changed to:', e.target.value);
                 setNewsDateFilter(e.target.value);
                 setNewsCurrentPage(1);
               }}
-              className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black"
-            />
-            <span className="text-xs text-gray-500">Selected: {newsDateFilter}</span>
+              className="border border-black px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black min-w-[200px]"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="3days">Last 3 Days</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+            </select>
           </div>
         )}
 
