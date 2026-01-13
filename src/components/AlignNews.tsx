@@ -71,11 +71,12 @@ const AlignNews: React.FC = () => {
     'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividyaMaxCount',
     'ಅಂತಾರಾಷ್ಟ್ರೀಯ': 'antharashtriyaMaxCount',
     'ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ': 'chitradallisuddiMaxCount',
-    'ಲೇಖನ': 'lekhanaMaxCount',
+    'ಲೇಖನ / ಕವನ': 'lekhanaMaxCount',
     'ಓದುಗರ ಪತ್ರ': 'odhugaraPatraMaxCount',
     'ರಾಜಕೀಯ': 'rajakiyaMaxCount',
     'ರಾಜ್ಯ / ರಾಷ್ಟ್ರ': 'rajyaRashtraMaxCount',
     'ಸಂಕ್ಷಿಪ್ತ': 'sankshipthahMaxCount',
+   
   };
 
   useEffect(() => {
