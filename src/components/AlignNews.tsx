@@ -40,7 +40,7 @@ interface Settings {
   suddiMaxCount?: number;
   suddiVaividhyaMaxCount?: number;
   antharashtriyaMaxCount?: number;
-  chitradallisuddiMaxCount?: number;
+  chitradalliSuddiMaxCount?: number;
   lekhanaMaxCount?: number;
   odhugaraPatraMaxCount?: number;
   rajakiyaMaxCount?: number;
@@ -109,7 +109,7 @@ const AlignNews: React.FC = () => {
         suddiMaxCount: response.data.suddiMaxCount,
         suddiVaividhyaMaxCount: response.data.suddiVaividhyaMaxCount,
         antharashtriyaMaxCount: response.data.antharashtriyaMaxCount,
-        chitradallisuddiMaxCount: response.data.chitradallisuddiMaxCount,
+        chitradalliSuddiMaxCount: response.data.chitradalliSuddiMaxCount,
         lekhanaMaxCount: response.data.lekhanaMaxCount,
         odhugaraPatraMaxCount: response.data.odhugaraPatraMaxCount,
         rajakiyaMaxCount: response.data.rajakiyaMaxCount,
