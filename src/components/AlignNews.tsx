@@ -68,7 +68,7 @@ const AlignNews: React.FC = () => {
 
   const categoryMaxCountMap: { [key: string]: keyof Settings } = {
     'ಸುದ್ದಿಗಳು': 'suddiMaxCount',
-    'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividyaMaxCount',
+    'ಸುದ್ದಿ ವೈವಿಧ್ಯ': 'suddiVaividhyaMaxCount',
     'ಅಂತಾರಾಷ್ಟ್ರೀಯ': 'antharashtriyaMaxCount',
     'ಚಿತ್ರದಲ್ಲಿ ಸುದ್ದಿ': 'chitradallisuddiMaxCount',
     'ಲೇಖನ / ಕವನ': 'lekhanaMaxCount',
