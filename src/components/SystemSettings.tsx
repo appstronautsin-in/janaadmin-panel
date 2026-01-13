@@ -37,8 +37,8 @@ interface Settings {
   rajakiyaMaxCount: number;
   rajyaRashtraMinCount: number;
   rajyaRashtraMaxCount: number;
-  sankshipthaMinCount: number;
-  sankshipthaMaxCount: number;
+  sankshipthahMinCount: number;
+  sankshipthahMaxCount: number;
   antharashtriyaBigDesign?: boolean;
   rajakiyaBigDesign?: boolean;
   suddiBigDesign?: boolean;
@@ -128,8 +128,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
         rajakiyaMaxCount: settings.rajakiyaMaxCount,
         rajyaRashtraMinCount: settings.rajyaRashtraMinCount,
         rajyaRashtraMaxCount: settings.rajyaRashtraMaxCount,
-        sankshipthaMinCount: settings.sankshipthaMinCount,
-        sankshipthaMaxCount: settings.sankshipthaMaxCount,
+        sankshipthahMinCount: settings.sankshipthahMinCount,
+        sankshipthahMaxCount: settings.sankshipthahMaxCount,
         antharashtriyaBigDesign: settings.antharashtriyaBigDesign,
         rajakiyaBigDesign: settings.rajakiyaBigDesign,
         suddiBigDesign: settings.suddiBigDesign,
@@ -600,8 +600,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                   <input
                     type="number"
                     min="0"
-                    value={settings.sankshipthaMinCount}
-                    onChange={(e) => handleInputChange('sankshipthaMinCount', parseInt(e.target.value) || 0)}
+                    value={settings.sankshipthahMinCount}
+                    onChange={(e) => handleInputChange('sankshipthahMinCount', parseInt(e.target.value) || 0)}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
                   />
                 </div>
@@ -610,8 +610,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ showAlert }) => {
                   <input
                     type="number"
                     min="0"
-                    value={settings.sankshipthaMaxCount}
-                    onChange={(e) => handleInputChange('sankshipthaMaxCount', parseInt(e.target.value) || 0)}
+                    value={settings.sankshipthahMaxCount}
+                    onChange={(e) => handleInputChange('sankshipthahMaxCount', parseInt(e.target.value) || 0)}
                     className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
                   />
                 </div>
