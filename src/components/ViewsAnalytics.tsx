@@ -173,7 +173,7 @@ const ViewsAnalytics: React.FC<ViewsAnalyticsProps> = ({ showAlert }) => {
   const fetchClassifiedData = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/v1/classified-ads');
+      const response = await api.get('/v1/classified-ads/running');
       let filteredAds = response.data;
 
       if (selectedCategory !== 'all') {
